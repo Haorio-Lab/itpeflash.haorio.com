@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>기술사 오답노트</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:#F7F5F1;color:#1C1A17;font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+button{cursor:pointer;border:none;background:none;font-family:inherit;line-height:1.4}
+input,select,textarea{font-family:inherit;outline:none}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#D5D0CA;border-radius:3px}
+.re-area:empty:before{content:attr(data-ph);color:#B0AAA4;pointer-events:none;display:block}
+.re-area:focus{outline:none}
+.re-area img,.rc img{max-width:100%;height:auto;border-radius:6px;margin:4px 0;display:block;cursor:pointer}
+.re-area img.img-sel{outline:2px solid #4C6EF5;outline-offset:2px}
+.re-area ul,.re-area ol,.rc ul,.rc ol{padding-left:20px}
+.re-area table,.rc table{border-collapse:collapse;width:100%;margin:8px 0}
+.re-area table td,.re-area table th,.rc table td,.rc table th{border:1px solid #E2DDD8;padding:6px 10px}
+.rc p{margin-bottom:4px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const DOMAINS=['소프트웨어 공학','데이터베이스','테스트','인공지능','경영컨설팅','빅데이터분석','보안','알고리즘','네트워크','UML','디자인패턴','프로젝트 관리','법제도','신기술','주간기술동향','CAOS','풀이문제'];
+
+const DEFAULT_NOTES=[
+  {id:'1',title:'정규화 제3정규형 vs 제2정규형 혼동',domain:'데이터베이스',tags:['정규화','3NF','함수종속'],importance:3,source:'2025년 1회 기출',created:'2026-06-15',
+   summary:'이행 함수 종속과 부분 함수 종속을 혼동하여 제3정규형 위반을 제2정규형으로 잘못 판단함',
+   problem:'릴레이션 R(학번, 과목코드, 성적, 학과, 학과장)에서 정규화 위반 여부와 해당 정규형을 판단하시오.\n\n함수 종속:\n- (학번, 과목코드) → 성적\n- 학번 → 학과\n- 학과 → 학과장',
+   content:'<p>제2정규형(2NF): <strong>부분 함수 종속 제거</strong>. (학번,과목코드)→성적은 완전 함수 종속이므로 2NF 만족.</p><p>제3정규형(3NF): <strong>이행 함수 종속 제거</strong>. 학번→학과→학과장이 이행 종속이라 3NF 위반. 학과 테이블을 분리해야 한다.</p><table><tr><th>정규형</th><th>제거 대상</th></tr><tr><td>1NF</td><td>원자값이 아닌 속성</td></tr><tr><td>2NF</td><td>부분 함수 종속</td></tr><tr><td>3NF</td><td>이행 함수 종속</td></tr><tr><td>BCNF</td><td>후보키가 아닌 결정자</td></tr></table>',
+   mnemonics:['제2NF: 복합 기본키 → 부분 함수 종속 제거','제3NF: 이행 함수 종속(A→B→C) 제거','BCNF: 모든 결정자가 후보키','2NF → 3NF → BCNF 순서로 강해진다'],
+   memo:'BCNF 분해 예시 + 무손실 분해 조건 함께 복습',deleted:false},
+  {id:'2',title:'프로세스 스케줄링 SJF 평균 대기시간 계산',domain:'알고리즘',tags:['스케줄링','SJF','간트차트'],importance:3,source:'2024년 2회 기출',created:'2026-06-14',
+   summary:'SJF(비선점)의 평균 대기시간 계산 오류. 간트 차트 없이 계산하다 실수',
+   problem:'도착시간 0,1,2,3의 프로세스 A,B,C,D의 실행시간이 8,4,9,5일 때 SJF 스케줄링의 평균 대기시간을 구하시오.',
+   content:'<p>SJF(비선점): 실행 중인 프로세스가 끝나야 다음 선택.</p><p><strong>간트차트:</strong> A(0~8) → B(8~12) → D(12~17) → C(17~26)</p><p>대기시간: A=0, B=8-1=<strong>7</strong>, D=12-3=<strong>9</strong>, C=17-2=<strong>15</strong></p><p>평균 = (0+7+9+15)/4 = <strong>7.75</strong></p>',
+   mnemonics:['SJF: 비선점, 완료 후 최단 작업 선택','SRTF: 선점형 SJF','간트 차트 없이 계산 금지 — 반드시 그리기'],
+   memo:'4-way handshake(연결 종료)도 함께 정리',deleted:false},
+  {id:'3',title:'TCP 3-way handshake 2단계 플래그',domain:'네트워크',tags:['TCP','handshake','프로토콜'],importance:2,source:'2025년 2회 기출',created:'2026-06-13',
+   summary:'2단계에서 서버가 SYN만 보내는 것으로 잘못 기술. SYN+ACK를 동시에 보냄',
+   problem:'TCP 연결 설정(3-way handshake) 과정의 각 단계 플래그와 시퀀스 번호를 기술하시오.',
+   content:'<p>1단계: 클라이언트→서버 <strong>SYN</strong>(seq=x)</p><p>2단계: 서버→클라이언트 <strong>SYN+ACK</strong>(seq=y, ack=x+1) ← 둘 다!</p><p>3단계: 클라이언트→서버 <strong>ACK</strong>(ack=y+1)</p>',
+   mnemonics:['1단계: SYN','2단계: SYN+ACK (둘 다!)','3단계: ACK','ACK번호 = 상대방 SEQ + 1'],
+   memo:'4-way handshake(연결 종료)도 함께 정리',deleted:false},
+  {id:'4',title:'팩토리 메서드 vs 추상 팩토리 패턴',domain:'디자인패턴',tags:['디자인패턴','GoF','생성패턴'],importance:2,source:'2025년 모의고사',created:'2026-06-12',
+   summary:'팩토리 메서드와 추상 팩토리를 동일한 패턴으로 혼동하여 설명',
+   problem:'팩토리 메서드 패턴과 추상 팩토리 패턴의 차이점을 설명하고 각각의 사용 예를 드시오.',
+   content:'<p><strong>팩토리 메서드</strong>: 서브클래스에서 어떤 클래스를 인스턴스화할지 결정. 단일 객체 생성 위임.</p><p><strong>추상 팩토리</strong>: 연관된 객체들의 집합(family)을 생성하는 인터페이스 제공. 플랫폼 독립.</p>',
+   mnemonics:['팩토리 메서드: 단일 객체, 서브클래스 위임','추상 팩토리: 객체 패밀리, 플랫폼 독립','GoF 23패턴 = 생성(5)+구조(7)+행위(11)'],
+   memo:'GoF 패턴 분류표 외우기',deleted:false},
+  {id:'5',title:'B-Tree vs Hash 인덱스 범위 검색',domain:'데이터베이스',tags:['인덱스','B-Tree','해시'],importance:1,source:'2024년 3회 기출',created:'2026-06-11',
+   summary:'해시 인덱스도 범위 검색에 효율적이라고 잘못 설명',
+   problem:'B-Tree 인덱스와 Hash 인덱스의 특징을 비교하고 각각에 적합한 쿼리 유형을 설명하시오.',
+   content:'<p><strong>Hash 인덱스</strong>: 등치 검색(=)만 O(1). 범위 검색 시 전체 스캔 필요.</p><p><strong>B-Tree 인덱스</strong>: 등치+범위+정렬 모두 지원 O(log n).</p>',
+   mnemonics:['Hash: O(1) 등치만, 범위 X','B-Tree: 등치+범위+정렬 O(log n)','InnoDB 기본 인덱스는 B+Tree'],
+   memo:'',deleted:false},
+  {id:'6',title:'UML Aggregation vs Composition 생명주기',domain:'UML',tags:['UML','클래스다이어그램','연관관계'],importance:2,source:'2025년 1회 기출',created:'2026-06-10',
+   summary:'집합(Aggregation)과 합성(Composition) 모두 생명주기를 함께한다고 잘못 설명',
+   problem:'UML 클래스 다이어그램에서 Aggregation과 Composition의 차이를 설명하시오.',
+   content:'<p><strong>Aggregation(집합)</strong>: 빈 다이아몬드 ◇. 부분 객체가 독립적으로 존재 가능. 예: Team◇Player</p><p><strong>Composition(합성)</strong>: 채워진 다이아몬드 ◆. 전체가 소멸하면 부분도 소멸. 예: Car◆Engine</p>',
+   mnemonics:['Aggregation: ◇ 빈, 독립 생명주기','Composition: ◆ 채워진, 공유 생명주기','Car◆Engine(합성), Team◇Player(집합)'],
+   memo:'기호와 예시 함께 암기',deleted:false},
+  {id:'7',title:'서브넷 /26 호스트 수 계산 오류',domain:'네트워크',tags:['IP','서브넷','CIDR'],importance:3,source:'2025년 2회 기출',created:'2026-06-09',
+   summary:'CIDR /26에서 네트워크/브로드캐스트 주소 2개 제외를 빠뜨리고 64로 계산',
+   problem:'192.168.1.0/26 서브넷의 사용 가능한 호스트 수와 브로드캐스트 주소를 구하시오.',
+   content:'<p>/26 → 서브넷 마스크 255.255.255.192. 2^(32-26)=64개 주소.</p><p>네트워크(.0)와 브로드캐스트(.63) 제외 → <strong>62개 호스트</strong></p><p>브로드캐스트: 192.168.1.63</p>',
+   mnemonics:['/26 → 64개 주소 → 62개 호스트','호스트 수 = 2^n - 2','브로드캐스트 = 해당 서브넷 마지막 주소','/24(254), /25(126), /26(62), /27(30), /28(14)'],
+   memo:'/24~28 표로 외우기',deleted:false},
+  {id:'8',title:'트랜잭션 ACID - 격리성 vs 일관성 혼동',domain:'데이터베이스',tags:['트랜잭션','ACID','격리성'],importance:2,source:'2024년 1회 기출',created:'2026-06-08',
+   summary:'격리성(Isolation)을 "트랜잭션 전후 데이터 일관성 유지"로 잘못 설명',
+   problem:'트랜잭션의 ACID 속성을 각각 설명하시오.',
+   content:'<p><strong>A(원자성)</strong>: All or Nothing</p><p><strong>C(일관성)</strong>: 무결성 제약조건 항상 유지</p><p><strong>I(격리성)</strong>: 트랜잭션 수행 중 다른 트랜잭션의 연산 불가 (독립 실행 보장)</p><p><strong>D(지속성)</strong>: 커밋 후 영구 저장</p>',
+   mnemonics:['원자성: All or Nothing','일관성: 무결성 제약조건 항상 유지','격리성: 다른 트랜잭션 간섭 없음','지속성: 커밋 후 영구 저장'],
+   memo:'ACID 각 영어 단어 뜻으로 연결해서 암기',deleted:false}
+];
+
+const NOTES_KEY='oa-notes-v2';
+const STATUS_KEY='oa-statuses';
+function loadNotes(){try{const s=localStorage.getItem(NOTES_KEY);if(s)return JSON.parse(s);}catch{}return DEFAULT_NOTES;}
+function saveNotes(n){localStorage.setItem(NOTES_KEY,JSON.stringify(n));}
+function loadStatuses(){try{return JSON.parse(localStorage.getItem(STATUS_KEY)||'{}')}catch{return{}}}
+function saveStatus(id,s){const a=loadStatuses();a[id]=s;localStorage.setItem(STATUS_KEY,JSON.stringify(a));}
+function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
+</script>
+<script type="text/babel">
+const {useState,useEffect,useRef,useMemo,useCallback}=React;
+
+const STATUS={
+  unchecked:{label:'미확인',dot:'#9CA3AF',bg:'#F9FAFB',text:'#374151',border:'#D1D5DB'},
+  memorized:{label:'암기 완료',dot:'#22C55E',bg:'#F0FDF4',text:'#15803D',border:'#86EFAC'},
+  review:{label:'다시 보기',dot:'#F59E0B',bg:'#FFFBEB',text:'#B45309',border:'#FCD34D'},
+  difficult:{label:'어려움',dot:'#EF4444',bg:'#FEF2F2',text:'#B91C1C',border:'#FCA5A5'},
+};
+
+function Dot({status,size=7}){const c=STATUS[status]||STATUS.unchecked;return <span style={{display:'inline-block',width:size,height:size,borderRadius:'50%',background:c.dot,flexShrink:0}}/>;}
+function StatusPill({status,size='sm'}){
+  const c=STATUS[status]||STATUS.unchecked;
+  const p=size==='sm'?'2px 8px':'4px 13px',fs=size==='sm'?11:13;
+  return <span style={{display:'inline-flex',alignItems:'center',gap:5,padding:p,borderRadius:99,background:c.bg,color:c.text,fontSize:fs,fontWeight:500,whiteSpace:'nowrap',border:`1px solid ${c.border}`}}><Dot status={status} size={6}/>{c.label}</span>;
+}
+function ImpDots({v}){return <span style={{display:'inline-flex',gap:3}}>{[1,2,3].map(i=><span key={i} style={{width:6,height:6,borderRadius:'50%',background:i<=v?'#4C6EF5':'#E2DDD8'}}/>)}</span>;}
+function Chip({label,active,onClick}){
+  return <span onClick={onClick} style={{display:'inline-block',padding:'2px 8px',borderRadius:4,fontSize:11,fontWeight:500,background:active?'#EEF2FF':'#F0EDE8',color:active?'#4338CA':'#6B6560',cursor:onClick?'pointer':'default',border:active?'1px solid #C7D2FE':'1px solid transparent',transition:'all .12s'}}>{label}</span>;
+}
+
+/* ── Rich Editor ─────────────────────── */
+function RichEditor({value,onChange,placeholder,minHeight=200}){
+  const ref=useRef(null);
+  const savedRange=useRef(null);
+  const inited=useRef(false);
+  const [selImg,setSelImg]=useState(null); // {el, rect, w}
+  const customPxRef=useRef(null);
+
+  useEffect(()=>{
+    if(ref.current&&!inited.current){ref.current.innerHTML=value||'';inited.current=true;}
+  },[]);
+
+  useEffect(()=>{
+    const dismiss=()=>setSelImg(null);
+    window.addEventListener('scroll',dismiss,true);
+    return()=>window.removeEventListener('scroll',dismiss,true);
+  },[]);
+
+  const saveRange=()=>{
+    const sel=window.getSelection();
+    if(sel&&sel.rangeCount>0)savedRange.current=sel.getRangeAt(0).cloneRange();
+  };
+
+  const getCleanHtml=()=>{
+    if(!ref.current)return'';
+    ref.current.querySelectorAll('img.img-sel').forEach(i=>i.classList.remove('img-sel'));
+    return ref.current.innerHTML;
+  };
+
+  const exec=(cmd,val=null)=>{
+    if(!ref.current)return;
+    ref.current.focus();
+    if(savedRange.current){const sel=window.getSelection();sel.removeAllRanges();sel.addRange(savedRange.current);}
+    document.execCommand(cmd,false,val);
+    onChange(getCleanHtml());
+    savedRange.current=null;
+  };
+
+  const insertImage=()=>{
+    saveRange();
+    const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
+    inp.onchange=e=>{
+      const f=e.target.files[0];if(!f)return;
+      const r=new FileReader();
+      r.onload=ev=>exec('insertHTML',`<img src="${ev.target.result}" style="width:100%;max-width:100%;height:auto;border-radius:6px;margin:4px 0"/>`);
+      r.readAsDataURL(f);
+    };
+    inp.click();
+  };
+
+  const handleEditorClick=e=>{
+    if(e.target.tagName==='IMG'){
+      const img=e.target;
+      ref.current.querySelectorAll('img.img-sel').forEach(i=>i.classList.remove('img-sel'));
+      img.classList.add('img-sel');
+      const rect=img.getBoundingClientRect();
+      const w=img.style.width||'100%';
+      setSelImg({el:img,rect,w});
+    } else {
+      ref.current.querySelectorAll('img.img-sel').forEach(i=>i.classList.remove('img-sel'));
+      setSelImg(null);
+    }
+  };
+
+  const applyImgSize=w=>{
+    if(!selImg)return;
+    selImg.el.style.width=w;
+    selImg.el.style.maxWidth='100%';
+    selImg.el.style.height='auto';
+    onChange(getCleanHtml());
+    selImg.el.classList.add('img-sel');
+    setSelImg(prev=>({...prev,w,rect:prev.el.getBoundingClientRect()}));
+  };
+
+  const PRESETS=['25%','33%','50%','75%','100%'];
+
+  const TBtn=({children,cmd,val,title})=>(
+    <button type="button" title={title}
+      onMouseDown={e=>{e.preventDefault();exec(cmd,val);}}
+      style={{padding:'3px 7px',borderRadius:4,fontSize:12,fontWeight:600,color:'#374151',background:'#fff',border:'1px solid #E2DDD8',cursor:'pointer'}}>
+      {children}
+    </button>
+  );
+  const Sep=()=><span style={{width:1,height:20,background:'#E2DDD8',display:'inline-block',margin:'0 2px',verticalAlign:'middle'}}/>;
+
+  const panelLeft=selImg?Math.min(selImg.rect.left,window.innerWidth-320):0;
+  const panelTop=selImg?selImg.rect.bottom+6:0;
+
+  return(
+    <div style={{border:'1px solid #E2DDD8',borderRadius:8,overflow:'hidden',background:'#fff'}}>
+      <div onMouseDown={e=>e.preventDefault()} style={{display:'flex',flexWrap:'wrap',gap:4,padding:'8px 10px',background:'#F8F6F2',borderBottom:'1px solid #E2DDD8',alignItems:'center'}}>
+        <TBtn cmd="bold" title="굵게"><b>B</b></TBtn>
+        <TBtn cmd="italic" title="기울임"><i>I</i></TBtn>
+        <TBtn cmd="underline" title="밑줄"><u>U</u></TBtn>
+        <TBtn cmd="strikeThrough" title="취소선"><s>S</s></TBtn>
+        <Sep/>
+        <select onMouseDown={e=>e.stopPropagation()} onFocus={saveRange}
+          onChange={e=>{const v=e.target.value;if(v){exec('fontSize',v);}e.target.value='';}}
+          style={{padding:'3px 5px',borderRadius:4,fontSize:12,color:'#374151',background:'#fff',border:'1px solid #E2DDD8',cursor:'pointer'}}>
+          <option value="">크기</option>
+          <option value="1">아주 작게</option>
+          <option value="2">작게</option>
+          <option value="3">보통</option>
+          <option value="4">크게</option>
+          <option value="5">아주 크게</option>
+        </select>
+        <label title="글자색" onMouseDown={e=>e.preventDefault()} style={{display:'inline-flex',alignItems:'center',gap:3,padding:'3px 7px',borderRadius:4,fontSize:11,color:'#374151',background:'#fff',border:'1px solid #E2DDD8',cursor:'pointer'}}>
+          A<input type="color" defaultValue="#1C1A17" onFocus={saveRange} onChange={e=>exec('foreColor',e.target.value)} style={{width:16,height:16,border:'none',padding:0,cursor:'pointer',borderRadius:2}}/>
+        </label>
+        <label title="하이라이트" onMouseDown={e=>e.preventDefault()} style={{display:'inline-flex',alignItems:'center',gap:3,padding:'3px 7px',borderRadius:4,fontSize:11,color:'#374151',background:'#fff',border:'1px solid #E2DDD8',cursor:'pointer'}}>
+          형광<input type="color" defaultValue="#FFFF00" onFocus={saveRange} onChange={e=>exec('backColor',e.target.value)} style={{width:16,height:16,border:'none',padding:0,cursor:'pointer',borderRadius:2}}/>
+        </label>
+        <Sep/>
+        <TBtn cmd="insertUnorderedList" title="불릿 목록">• 목록</TBtn>
+        <TBtn cmd="insertOrderedList" title="번호 목록">1. 목록</TBtn>
+        <Sep/>
+        <button type="button" title="이미지 삽입" onMouseDown={e=>{e.preventDefault();insertImage();}}
+          style={{padding:'3px 7px',borderRadius:4,fontSize:12,color:'#374151',background:'#fff',border:'1px solid #E2DDD8',cursor:'pointer'}}>
+          🖼 이미지
+        </button>
+        <TBtn cmd="insertHorizontalRule" title="구분선">—</TBtn>
+        <Sep/>
+        <TBtn cmd="removeFormat" title="서식 제거">지우기</TBtn>
+      </div>
+      <div ref={ref} contentEditable className="re-area" data-ph={placeholder||'내용을 입력하세요...'}
+        onInput={()=>onChange(getCleanHtml())}
+        onBlur={saveRange}
+        onClick={handleEditorClick}
+        style={{minHeight,padding:'14px 16px',fontSize:14,lineHeight:1.8,color:'#1C1A17',outline:'none',overflowY:'auto',maxHeight:480}}/>
+      {selImg&&(
+        <div style={{position:'fixed',top:panelTop,left:panelLeft,background:'#fff',border:'1px solid #C7D2FE',borderRadius:10,padding:'8px 12px',boxShadow:'0 6px 24px rgba(0,0,0,0.14)',display:'flex',flexWrap:'wrap',gap:6,alignItems:'center',zIndex:2000,maxWidth:340}}>
+          <span style={{fontSize:11,fontWeight:700,color:'#4338CA',marginRight:4}}>🖼 이미지 크기</span>
+          {PRESETS.map(w=>(
+            <button key={w} type="button" onMouseDown={e=>{e.preventDefault();applyImgSize(w);}}
+              style={{padding:'3px 9px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer',border:'1.5px solid',borderColor:selImg.w===w?'#4C6EF5':'#E2DDD8',background:selImg.w===w?'#4C6EF5':'#F8F6F2',color:selImg.w===w?'#fff':'#374151'}}>
+              {w}
+            </button>
+          ))}
+          <div style={{display:'flex',alignItems:'center',gap:4,marginLeft:2}}>
+            <input ref={customPxRef} type="number" placeholder="px" min="40" max="1600"
+              style={{width:58,padding:'3px 6px',borderRadius:6,border:'1px solid #E2DDD8',fontSize:11,color:'#1C1A17'}}
+              onKeyDown={e=>{if(e.key==='Enter'&&e.target.value){applyImgSize(e.target.value+'px');}}}/>
+            <button type="button" onMouseDown={e=>{e.preventDefault();if(customPxRef.current?.value)applyImgSize(customPxRef.current.value+'px');}}
+              style={{padding:'3px 8px',borderRadius:6,fontSize:11,fontWeight:600,background:'#E8E4DF',color:'#6B6560',border:'none',cursor:'pointer'}}>적용</button>
+          </div>
+          <button type="button" onMouseDown={e=>{e.preventDefault();ref.current.querySelectorAll('img.img-sel').forEach(i=>i.classList.remove('img-sel'));setSelImg(null);}}
+            style={{marginLeft:'auto',fontSize:15,color:'#9B9590',lineHeight:1,background:'none',border:'none',cursor:'pointer',padding:'0 2px'}}>×</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Note Card ───────────────────────── */
+function NoteCard({note,status,onClick}){
+  const c=STATUS[status]||STATUS.unchecked;
+  const [hov,setHov]=useState(false);
+  return(
+    <div onClick={onClick} onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
+      style={{background:'#fff',borderRadius:12,border:`1px solid ${hov?'#C7D2FE':'#E8E4DF'}`,padding:'15px 16px',cursor:'pointer',transition:'all .15s',borderLeft:`3px solid ${c.dot}`,boxShadow:hov?'0 4px 16px rgba(0,0,0,0.08)':'none',transform:hov?'translateY(-1px)':'none'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:7}}>
+        <h3 style={{fontSize:14,fontWeight:600,color:'#1C1A17',lineHeight:1.4,flex:1,marginRight:8}}>{note.title}</h3>
+        <ImpDots v={note.importance}/>
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8,flexWrap:'wrap'}}>
+        <StatusPill status={status}/>
+        <span style={{fontSize:12,color:'#9B9590'}}>{note.domain}</span>
+      </div>
+      <p style={{fontSize:13,color:'#6B6560',lineHeight:1.5,marginBottom:10,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{note.content?note.content.replace(/<[^>]+>/g,'').slice(0,120):note.summary}</p>
+      <div style={{display:'flex',gap:4,flexWrap:'wrap',alignItems:'center'}}>
+        {note.tags.slice(0,3).map(t=><Chip key={t} label={t}/>)}
+        <span style={{marginLeft:'auto',fontSize:11,color:'#B0AAA4'}}>{note.created}</span>
+      </div>
+    </div>
+  );
+}
+
+/* ── Sidebar ─────────────────────────── */
+function Sidebar({notes,filters,setFilters,statuses}){
+  const active=notes.filter(n=>!n.deleted);
+  const allTags=[...new Set(active.flatMap(n=>n.tags))];
+  const toggle=(key,val)=>setFilters(f=>{const a=f[key];return{...f,[key]:a.includes(val)?a.filter(x=>x!==val):[...a,val]};});
+  const SecTitle=({t})=><div style={{fontSize:11,fontWeight:600,color:'#9B9590',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:6,marginTop:12}}>{t}</div>;
+  const Btn=({label,active:isActive,onClick,dot,count})=>(
+    <button onClick={onClick} style={{display:'flex',alignItems:'center',gap:6,width:'100%',padding:'5px 8px',borderRadius:6,textAlign:'left',fontSize:12,color:isActive?'#1C1A17':'#6B6560',background:isActive?'#EEF2FF':'transparent',fontWeight:isActive?600:400,transition:'all .1s'}}>
+      {dot&&<span style={{width:8,height:8,borderRadius:'50%',background:dot,flexShrink:0}}/>}
+      <span style={{flex:1}}>{label}</span>
+      {count!=null&&<span style={{fontSize:11,color:'#B0AAA4'}}>{count}</span>}
+    </button>
+  );
+  const stCounts=useMemo(()=>{const c={};Object.keys(STATUS).forEach(k=>{c[k]=active.filter(n=>(statuses[n.id]||'unchecked')===k).length});return c;},[active,statuses]);
+  const hasF=filters.domain.length||filters.tags.length||filters.importance.length||filters.status.length;
+  return(
+    <div style={{width:196,flexShrink:0,padding:'12px 10px',overflowY:'auto',height:'100%'}}>
+      <SecTitle t="상태"/>
+      {Object.entries(STATUS).map(([k,cfg])=>(
+        <Btn key={k} label={cfg.label} dot={cfg.dot} count={stCounts[k]} active={filters.status.includes(k)} onClick={()=>toggle('status',k)}/>
+      ))}
+      <SecTitle t="도메인"/>
+      {DOMAINS.map(d=><Btn key={d} label={d} active={filters.domain.includes(d)} onClick={()=>toggle('domain',d)}/>)}
+      <SecTitle t="중요도"/>
+      {[[3,'매우 중요'],[2,'중요'],[1,'보통']].map(([v,l])=>(
+        <Btn key={v} label={l} active={filters.importance.includes(v)} onClick={()=>toggle('importance',v)}/>
+      ))}
+      <SecTitle t="태그"/>
+      <div style={{display:'flex',flexWrap:'wrap',gap:4,padding:'0 4px'}}>
+        {allTags.map(t=><Chip key={t} label={t} active={filters.tags.includes(t)} onClick={()=>toggle('tags',t)}/>)}
+      </div>
+      {!!hasF&&<button onClick={()=>setFilters(f=>({...f,domain:[],tags:[],importance:[],status:[]}))}
+        style={{width:'100%',padding:'7px',borderRadius:8,fontSize:12,color:'#6B6560',background:'#F0EDE8',fontWeight:500,marginTop:14}}>
+        필터 초기화
+      </button>}
+    </div>
+  );
+}
+
+/* ── Stats Panel ─────────────────────── */
+function StatsPanel({notes,statuses,onStudy}){
+  const active=notes.filter(n=>!n.deleted);
+  const counts=useMemo(()=>{const c={memorized:0,review:0,difficult:0,unchecked:0};active.forEach(n=>{c[statuses[n.id]||'unchecked']++});return c;},[active,statuses]);
+  const pct=active.length?Math.round(counts.memorized/active.length*100):0;
+  return(
+    <div style={{width:186,flexShrink:0,padding:'16px 14px',overflowY:'auto'}}>
+      <div style={{fontSize:11,fontWeight:600,color:'#9B9590',textTransform:'uppercase',letterSpacing:'0.08em',marginBottom:12}}>학습 현황</div>
+      <div style={{background:'#fff',borderRadius:10,border:'1px solid #E8E4DF',padding:14,marginBottom:12}}>
+        <div style={{fontSize:28,fontWeight:700,color:'#1C1A17',lineHeight:1}}>{pct}<span style={{fontSize:14,fontWeight:400,color:'#9B9590'}}>%</span></div>
+        <div style={{fontSize:12,color:'#9B9590',marginBottom:8,marginTop:2}}>암기 완료율</div>
+        <div style={{height:5,background:'#F0EDE8',borderRadius:3,overflow:'hidden'}}>
+          <div style={{height:'100%',width:`${pct}%`,background:'#22C55E',borderRadius:3,transition:'width .4s'}}/>
+        </div>
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:5,marginBottom:14}}>
+        {Object.entries(STATUS).map(([k,cfg])=>(
+          <div key={k} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'6px 10px',background:cfg.bg,borderRadius:7}}>
+            <span style={{display:'flex',alignItems:'center',gap:6,fontSize:12,color:cfg.text,fontWeight:500}}><Dot status={k} size={6}/>{cfg.label}</span>
+            <span style={{fontSize:13,fontWeight:700,color:cfg.text}}>{counts[k]}</span>
+          </div>
+        ))}
+      </div>
+      <button onClick={onStudy} style={{width:'100%',padding:'10px',borderRadius:9,background:'#4C6EF5',color:'#fff',fontSize:13,fontWeight:600}}
+        onMouseEnter={e=>e.currentTarget.style.background='#3B5BDB'} onMouseLeave={e=>e.currentTarget.style.background='#4C6EF5'}>
+        학습 시작
+      </button>
+    </div>
+  );
+}
+
+/* ── Detail View ─────────────────────── */
+function DetailView({note,status,onBack,onStatusChange,onEdit,onDelete}){
+  const [col,setCol]=useState({});
+  const toggle=k=>setCol(c=>({...c,[k]:!c[k]}));
+  const Section=({id,title,bg,children})=>(
+    <div style={{marginBottom:12,borderRadius:10,border:'1px solid #E8E4DF',overflow:'hidden'}}>
+      <button type="button" onClick={()=>toggle(id)} style={{width:'100%',display:'flex',justifyContent:'space-between',alignItems:'center',padding:'11px 15px',background:bg||'#F8F6F2',textAlign:'left'}}>
+        <span style={{fontSize:13,fontWeight:600,color:'#1C1A17'}}>{title}</span>
+        <span style={{fontSize:14,color:'#9B9590',transform:col[id]?'rotate(-90deg)':'none',transition:'transform .18s'}}>▾</span>
+      </button>
+      {!col[id]&&<div style={{padding:'13px 15px',background:'#fff',fontSize:14,color:'#3D3A36',lineHeight:1.75}}>{children}</div>}
+    </div>
+  );
+  return(
+    <div style={{flex:1,overflow:'auto',padding:24}}>
+      <div style={{marginBottom:12}}>
+        <button type="button" onClick={onBack} style={{display:'flex',alignItems:'center',gap:6,fontSize:13,color:'#6B6560',fontWeight:500}}>← 목록으로</button>
+      </div>
+      <div style={{maxWidth:720}}>
+        <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginBottom:14}}>
+          <button type="button" onClick={onEdit} style={{padding:'7px 14px',borderRadius:8,background:'#EEF2FF',color:'#4338CA',fontSize:13,fontWeight:500}}>✏️ 수정</button>
+          <button type="button" onClick={onDelete} style={{padding:'7px 14px',borderRadius:8,background:'#FEF2F2',color:'#B91C1C',fontSize:13,fontWeight:500}}>🗑 삭제</button>
+        </div>
+        <div style={{display:'flex',gap:8,alignItems:'center',marginBottom:10,flexWrap:'wrap'}}>
+          <StatusPill status={status} size="md"/>
+          <span style={{fontSize:13,color:'#9B9590'}}>{note.domain}</span>
+          <ImpDots v={note.importance}/>
+          <span style={{fontSize:12,color:'#B0AAA4',marginLeft:'auto'}}>{note.source} · {note.created}</span>
+        </div>
+        <div style={{display:'flex',gap:4,marginBottom:16,flexWrap:'wrap'}}>{note.tags.map(t=><Chip key={t} label={t}/>)}</div>
+        <Section id="p" title="🏷 토픽" bg="#F0F4FF">
+          <div style={{fontWeight:700,fontSize:16,color:'#1C1A17',marginBottom:note.problem?10:0}}>{note.title}</div>
+          {note.problem&&<div style={{whiteSpace:'pre-wrap',color:'#3D3A36'}}>{note.problem}</div>}
+        </Section>
+        {note.content&&<Section id="c" title="📝 내용" bg="#F8F6F2"><div className="rc" dangerouslySetInnerHTML={{__html:note.content}}/></Section>}
+        {note.mnemonics&&note.mnemonics.length>0&&(
+          <Section id="k" title="🔑 암기두음" bg="#F5F0FF">
+            <ul style={{paddingLeft:18,display:'flex',flexDirection:'column',gap:6}}>
+              {note.mnemonics.map((p,i)=><li key={i} style={{fontWeight:500,color:'#4338CA'}}>{p}</li>)}
+            </ul>
+          </Section>
+        )}
+        {note.memo&&<Section id="n" title="📌 메모" bg="#FFFBEB"><div style={{color:'#6B6560',whiteSpace:'pre-wrap'}}>{note.memo}</div></Section>}
+        <div style={{marginTop:24,padding:'14px 16px',background:'#F8F6F2',borderRadius:12}}>
+          <div style={{fontSize:11,fontWeight:600,color:'#9B9590',marginBottom:10,textTransform:'uppercase',letterSpacing:'0.06em'}}>암기 상태 변경</div>
+          <div style={{display:'flex',gap:7,flexWrap:'wrap'}}>
+            {Object.entries(STATUS).map(([k,cfg])=>(
+              <button key={k} type="button" onClick={()=>onStatusChange(note.id,k)}
+                style={{padding:'7px 14px',borderRadius:99,fontSize:13,fontWeight:500,background:status===k?cfg.bg:'#fff',color:status===k?cfg.text:'#6B6560',border:`1.5px solid ${status===k?cfg.dot:'#E2DDD8'}`,transition:'all .15s'}}>
+                {cfg.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Card Editor ─────────────────────── */
+function CardEditor({note,onSave,onCancel}){
+  const isEdit=!!note;
+  const [form,setForm]=useState({
+    title:note?.title||'',domain:note?.domain||DOMAINS[0],
+    tags:note?.tags?.join(', ')||'',importance:note?.importance||2,
+    source:note?.source||'',problem:note?.problem||'',
+    mnemonics:note?.mnemonics?.join('\n')||'',memo:note?.memo||'',
+  });
+  const [html,setHtml]=useState(note?.content||'');
+  const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+
+  const handleSave=()=>{
+    if(!form.title.trim()){alert('제목을 입력하세요.');return;}
+    const tags=form.tags.split(',').map(t=>t.trim()).filter(Boolean);
+    const mnemonics=form.mnemonics.split('\n').map(t=>t.trim()).filter(Boolean);
+    onSave({
+      id:note?.id||genId(),
+      title:form.title.trim(),domain:form.domain,tags,
+      importance:Number(form.importance),source:form.source.trim(),
+      created:note?.created||new Date().toISOString().slice(0,10),
+      summary:form.problem.trim().slice(0,80)||html.replace(/<[^>]+>/g,'').slice(0,80),
+      problem:form.problem.trim(),content:html,mnemonics,memo:form.memo.trim(),deleted:false,
+    });
+  };
+
+  const FL=({t})=><div style={{fontSize:12,fontWeight:600,color:'#6B6560',marginBottom:6,marginTop:16}}>{t}</div>;
+  const inp={width:'100%',padding:'9px 12px',borderRadius:8,border:'1px solid #E2DDD8',fontSize:14,color:'#1C1A17',background:'#fff'};
+  return(
+    <div style={{flex:1,overflow:'auto',padding:24}}>
+      <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:24}}>
+        <button type="button" onClick={onCancel} style={{display:'flex',alignItems:'center',padding:'6px 10px',borderRadius:7,background:'#E8E4DF',color:'#6B6560',fontSize:13,fontWeight:600,flexShrink:0}}>←</button>
+        <h2 style={{fontSize:18,fontWeight:700,color:'#1C1A17'}}>{isEdit?'카드 수정':'새 카드 만들기'}</h2>
+      </div>
+      <div style={{maxWidth:780}}>
+        <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginBottom:20}}>
+          <button type="button" onClick={onCancel} style={{padding:'8px 16px',borderRadius:8,background:'#E8E4DF',color:'#6B6560',fontSize:13,fontWeight:500}}>취소</button>
+          <button type="button" onClick={handleSave} style={{padding:'8px 16px',borderRadius:8,background:'#4C6EF5',color:'#fff',fontSize:13,fontWeight:600}}>저장</button>
+        </div>
+        <FL t="🏷 토픽 제목 *"/>
+        <input value={form.title} onChange={e=>set('title',e.target.value)} style={inp} placeholder="카드 제목"/>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,marginTop:16}}>
+          <div><FL t="도메인"/>
+            <select value={form.domain} onChange={e=>set('domain',e.target.value)} style={inp}>
+              {DOMAINS.map(d=><option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+          <div><FL t="중요도"/>
+            <select value={form.importance} onChange={e=>set('importance',e.target.value)} style={inp}>
+              <option value={3}>매우 중요</option><option value={2}>중요</option><option value={1}>보통</option>
+            </select>
+          </div>
+          <div><FL t="출처"/>
+            <input value={form.source} onChange={e=>set('source',e.target.value)} style={inp} placeholder="예: 2025년 1회 기출"/>
+          </div>
+        </div>
+        <FL t="태그 (쉼표로 구분)"/>
+        <input value={form.tags} onChange={e=>set('tags',e.target.value)} style={inp} placeholder="예: TCP, 네트워크, 프로토콜"/>
+        <FL t="📝 내용 (서식 있는 텍스트)"/>
+        <RichEditor value={html} onChange={setHtml} placeholder="내용을 입력하세요. 서식 도구로 꾸밀 수 있어요." minHeight={200}/>
+        <FL t="🔑 암기두음 (줄바꿈으로 구분)"/>
+        <textarea value={form.mnemonics} onChange={e=>set('mnemonics',e.target.value)}
+          style={{...inp,minHeight:100,resize:'vertical',lineHeight:1.6}} placeholder="한 줄에 하나씩 입력"/>
+        <FL t="📌 메모"/>
+        <textarea value={form.memo} onChange={e=>set('memo',e.target.value)}
+          style={{...inp,minHeight:80,resize:'vertical',lineHeight:1.6}} placeholder="개인 메모"/>
+        <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginTop:20}}>
+          <button type="button" onClick={onCancel} style={{padding:'8px 16px',borderRadius:8,background:'#E8E4DF',color:'#6B6560',fontSize:13,fontWeight:500}}>취소</button>
+          <button type="button" onClick={handleSave} style={{padding:'8px 16px',borderRadius:8,background:'#4C6EF5',color:'#fff',fontSize:13,fontWeight:600}}>저장</button>
+        </div>
+        <div style={{height:40}}/>
+      </div>
+    </div>
+  );
+}
+
+/* ── Trash View ──────────────────────── */
+function TrashView({notes,onRestore,onPermDel,onBack}){
+  const deleted=notes.filter(n=>n.deleted);
+  const [confirm,setConfirm]=useState(null);
+  return(
+    <div style={{flex:1,overflow:'auto',padding:24}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+        <button type="button" onClick={onBack} style={{fontSize:13,color:'#6B6560',fontWeight:500}}>← 목록으로</button>
+        <h2 style={{fontSize:16,fontWeight:700,color:'#1C1A17'}}>🗑 휴지통 ({deleted.length})</h2>
+        {deleted.length>0
+          ?<button type="button" onClick={()=>setConfirm('all')} style={{padding:'6px 12px',borderRadius:8,background:'#FEF2F2',color:'#B91C1C',fontSize:12,fontWeight:500}}>전체 영구 삭제</button>
+          :<div style={{width:80}}/>}
+      </div>
+      {deleted.length===0?(
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:300,color:'#9B9590',gap:8}}>
+          <span style={{fontSize:40,opacity:.4}}>🗑</span>
+          <p style={{fontSize:15,fontWeight:500}}>휴지통이 비어 있습니다</p>
+        </div>
+      ):(
+        <div style={{display:'flex',flexDirection:'column',gap:10,maxWidth:720}}>
+          {deleted.map(n=>(
+            <div key={n.id} style={{background:'#fff',borderRadius:10,border:'1px solid #E8E4DF',padding:'14px 16px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div style={{flex:1,marginRight:12}}>
+                <div style={{fontSize:14,fontWeight:600,color:'#6B6560'}}>{n.title}</div>
+                <div style={{fontSize:12,color:'#B0AAA4',marginTop:2}}>{n.domain} · {n.created}</div>
+              </div>
+              <div style={{display:'flex',gap:6}}>
+                <button type="button" onClick={()=>onRestore(n.id)} style={{padding:'5px 12px',borderRadius:7,background:'#EEF2FF',color:'#4338CA',fontSize:12,fontWeight:500}}>복원</button>
+                <button type="button" onClick={()=>setConfirm(n.id)} style={{padding:'5px 12px',borderRadius:7,background:'#FEF2F2',color:'#B91C1C',fontSize:12,fontWeight:500}}>영구 삭제</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {confirm&&(
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.4)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:100}}>
+          <div style={{background:'#fff',borderRadius:14,padding:28,maxWidth:360,width:'90%',textAlign:'center',boxShadow:'0 20px 60px rgba(0,0,0,0.2)'}}>
+            <div style={{fontSize:32,marginBottom:12}}>⚠️</div>
+            <h3 style={{fontSize:16,fontWeight:700,marginBottom:8,color:'#1C1A17'}}>영구 삭제 확인</h3>
+            <p style={{fontSize:13,color:'#6B6560',marginBottom:20}}>{confirm==='all'?'휴지통의 모든 카드를':'이 카드를'} 완전히 삭제합니다. 복원 불가.</p>
+            <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+              <button type="button" onClick={()=>setConfirm(null)} style={{padding:'9px 20px',borderRadius:9,background:'#E8E4DF',color:'#6B6560',fontWeight:600,fontSize:14}}>취소</button>
+              <button type="button" onClick={()=>{onPermDel(confirm);setConfirm(null);}} style={{padding:'9px 20px',borderRadius:9,background:'#EF4444',color:'#fff',fontWeight:600,fontSize:14}}>삭제</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Study Mode ──────────────────────── */
+function StudyMode({notes,statuses,onEnd,onStatusChange}){
+  const [idx,setIdx]=useState(0);
+  const [showAns,setShowAns]=useState(false);
+  const [auto,setAuto]=useState(false);
+  const [sec,setSec]=useState(20);
+  const [left,setLeft]=useState(20);
+  const [paused,setPaused]=useState(false);
+  const timerRef=useRef(null);
+  const note=notes[idx];const total=notes.length;
+  const status=statuses[note?.id]||'unchecked';
+  useEffect(()=>{
+    clearInterval(timerRef.current);
+    if(auto&&!paused){timerRef.current=setInterval(()=>setLeft(t=>{if(t<=1){goNext();return sec;}return t-1;}),1000);}
+    return()=>clearInterval(timerRef.current);
+  },[auto,paused,idx,sec]);
+  const goNext=useCallback(()=>{if(idx<total-1){setIdx(i=>i+1);setShowAns(false);setLeft(sec);}else onEnd();},[idx,total,sec,onEnd]);
+  const goPrev=()=>{if(idx>0){setIdx(i=>i-1);setShowAns(false);setLeft(sec);}};
+  const pick=k=>{onStatusChange(note.id,k);goNext();};
+  if(!note)return null;
+  const pct=((idx+1)/total)*100;
+  return(
+    <div style={{flex:1,display:'flex',flexDirection:'column',padding:20,overflow:'hidden'}}>
+      <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:16}}>
+        <button type="button" onClick={onEnd} style={{padding:'6px 12px',borderRadius:8,background:'#E8E4DF',color:'#6B6560',fontSize:13,fontWeight:500,flexShrink:0}}>종료</button>
+        <div style={{flex:1,height:6,background:'#E8E4DF',borderRadius:3,overflow:'hidden'}}><div style={{height:'100%',width:`${pct}%`,background:'#4C6EF5',borderRadius:3,transition:'width .3s'}}/></div>
+        <span style={{fontSize:13,color:'#6B6560',flexShrink:0}}>{idx+1} / {total}</span>
+        {auto&&<span style={{fontSize:13,fontWeight:700,color:'#4C6EF5',minWidth:32,textAlign:'right'}}>{left}s</span>}
+      </div>
+      <div style={{flex:1,display:'flex',flexDirection:'column',background:'#fff',borderRadius:16,border:'1px solid #E8E4DF',padding:'24px 28px',overflow:'auto',maxWidth:780,margin:'0 auto',width:'100%'}}>
+        <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap',alignItems:'center'}}>
+          <StatusPill status={status}/><span style={{fontSize:12,color:'#9B9590'}}>{note.domain}</span>
+          <ImpDots v={note.importance}/>
+          <div style={{marginLeft:'auto',display:'flex',gap:4}}>{note.tags.map(t=><Chip key={t} label={t}/>)}</div>
+        </div>
+        <div style={{padding:'14px 16px',background:'#F0F4FF',borderRadius:10,marginBottom:16}}>
+          <div style={{fontSize:11,fontWeight:600,color:'#4338CA',marginBottom:8,textTransform:'uppercase',letterSpacing:'0.06em'}}>🏷 토픽</div>
+          <div style={{fontSize:17,fontWeight:700,color:'#1C1A17',lineHeight:1.4,marginBottom:note.problem?10:0}}>{note.title}</div>
+          {note.problem&&<div style={{fontSize:14,color:'#3D3A36',lineHeight:1.75,whiteSpace:'pre-wrap'}}>{note.problem}</div>}
+        </div>
+        {!showAns?(
+          <button type="button" onClick={()=>setShowAns(true)} style={{width:'100%',padding:14,borderRadius:10,background:'#4C6EF5',color:'#fff',fontSize:15,fontWeight:600,marginTop:'auto'}}
+            onMouseEnter={e=>e.currentTarget.style.background='#3B5BDB'} onMouseLeave={e=>e.currentTarget.style.background='#4C6EF5'}>
+            내용 확인
+          </button>
+        ):(
+          <div>
+            {note.content&&<div style={{padding:'14px 16px',background:'#F0FDF4',borderRadius:10,marginBottom:12,borderLeft:'3px solid #22C55E'}}>
+              <div style={{fontSize:11,fontWeight:600,color:'#15803D',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.06em'}}>내용</div>
+              <div style={{fontSize:14,lineHeight:1.75}} dangerouslySetInnerHTML={{__html:note.content}}/>
+            </div>}
+            {note.mnemonics&&note.mnemonics.length>0&&<div style={{padding:'14px 16px',background:'#F5F0FF',borderRadius:10,marginBottom:18}}>
+              <div style={{fontSize:11,fontWeight:600,color:'#4338CA',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.06em'}}>암기두음</div>
+              <ul style={{paddingLeft:18,display:'flex',flexDirection:'column',gap:4}}>
+                {note.mnemonics.map((p,i)=><li key={i} style={{fontSize:13,color:'#4338CA',fontWeight:500}}>{p}</li>)}
+              </ul>
+            </div>}
+            <div style={{display:'flex',gap:8,justifyContent:'center',flexWrap:'wrap'}}>
+              {[['memorized','✓ 암기 완료'],['review','↩ 다시 보기'],['difficult','✗ 어려움']].map(([k,l])=>{
+                const c=STATUS[k];
+                return <button key={k} type="button" onClick={()=>pick(k)} style={{padding:'10px 20px',borderRadius:10,fontSize:13,fontWeight:600,background:c.bg,color:c.text,border:`1.5px solid ${c.border}`,flex:1,minWidth:110}}>{l}</button>;
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+      <div style={{display:'flex',alignItems:'center',gap:10,marginTop:14,justifyContent:'center',flexWrap:'wrap'}}>
+        <button type="button" onClick={goPrev} disabled={idx===0} style={{padding:'8px 16px',borderRadius:8,background:'#E8E4DF',color:'#6B6560',fontSize:13,fontWeight:500,opacity:idx===0?.4:1}}>← 이전</button>
+        <button type="button" onClick={()=>setPaused(p=>!p)} style={{padding:'8px 14px',borderRadius:8,background:'#E8E4DF',color:'#6B6560',fontSize:13,fontWeight:500}}>{paused?'▶ 재개':'⏸ 일시정지'}</button>
+        <label style={{display:'flex',alignItems:'center',gap:6,fontSize:12,color:'#6B6560',cursor:'pointer'}}>
+          <input type="checkbox" checked={auto} onChange={e=>setAuto(e.target.checked)}/>자동 넘김
+        </label>
+        <select value={sec} onChange={e=>{setSec(+e.target.value);setLeft(+e.target.value);}} style={{fontSize:12,padding:'4px 8px',borderRadius:6,border:'1px solid #E2DDD8',background:'#fff',color:'#6B6560',cursor:'pointer'}}>
+          <option value={10}>10초</option><option value={20}>20초</option><option value={30}>30초</option><option value={60}>1분</option>
+        </select>
+        <button type="button" onClick={goNext} style={{padding:'8px 16px',borderRadius:8,background:'#4C6EF5',color:'#fff',fontSize:13,fontWeight:500}}>다음 →</button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Session End ─────────────────────── */
+function SessionEnd({notes,statuses,onRestart,onBack}){
+  const counts=useMemo(()=>{const c={memorized:0,review:0,difficult:0,unchecked:0};notes.forEach(n=>{c[statuses[n.id]||'unchecked']++});return c;},[notes,statuses]);
+  return(
+    <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',padding:40}}>
+      <div style={{textAlign:'center',maxWidth:420}}>
+        <div style={{fontSize:52,marginBottom:14}}>🎉</div>
+        <h2 style={{fontSize:22,fontWeight:700,marginBottom:6,color:'#1C1A17'}}>학습 세션 완료!</h2>
+        <p style={{color:'#9B9590',marginBottom:28,fontSize:14}}>{notes.length}개의 오답을 학습했습니다</p>
+        <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:28}}>
+          {Object.entries(STATUS).map(([k,cfg])=>(
+            <div key={k} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'12px 18px',background:cfg.bg,borderRadius:10,border:`1px solid ${cfg.border}`}}>
+              <div style={{display:'flex',alignItems:'center',gap:8}}><Dot status={k} size={8}/><span style={{fontSize:14,color:cfg.text,fontWeight:500}}>{cfg.label}</span></div>
+              <span style={{fontSize:20,fontWeight:700,color:cfg.text}}>{counts[k]}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+          <button type="button" onClick={onBack} style={{padding:'10px 22px',borderRadius:9,background:'#E8E4DF',color:'#6B6560',fontWeight:600,fontSize:14}}>목록으로</button>
+          <button type="button" onClick={onRestart} style={{padding:'10px 22px',borderRadius:9,background:'#4C6EF5',color:'#fff',fontWeight:600,fontSize:14}}
+            onMouseEnter={e=>e.currentTarget.style.background='#3B5BDB'} onMouseLeave={e=>e.currentTarget.style.background='#4C6EF5'}>
+            다시 학습
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── App ─────────────────────────────── */
+function App(){
+  const [notes,setNotes]=useState(loadNotes);
+  const [view,setView]=useState('list');
+  const [sel,setSel]=useState(null);
+  const [statuses,setStatuses]=useState(loadStatuses);
+  const [filters,setFilters]=useState({domain:[],tags:[],importance:[],status:[],search:''});
+  const [sort,setSort]=useState('recent');
+
+  const notesRef=useRef(notes);
+  useEffect(()=>{notesRef.current=notes;},[notes]);
+
+  const navigate=useCallback((v,s=null)=>{
+    window.history.pushState({view:v,selId:s?.id||null},'');
+    setView(v);setSel(s);
+  },[]);
+
+  useEffect(()=>{
+    window.history.replaceState({view:'list',selId:null},'');
+    const h=e=>{
+      if(!e.state)return;
+      setView(e.state.view||'list');
+      setSel(e.state.selId?notesRef.current.find(n=>n.id===e.state.selId)||null:null);
+    };
+    window.addEventListener('popstate',h);
+    return()=>window.removeEventListener('popstate',h);
+  },[]);
+
+  const persist=n=>{setNotes(n);saveNotes(n);};
+  const handleStatus=(id,s)=>{saveStatus(id,s);setStatuses(loadStatuses());};
+
+  const active=useMemo(()=>notes.filter(n=>!n.deleted),[notes]);
+  const filtered=useMemo(()=>{
+    let r=[...active];
+    const st=loadStatuses();
+    if(filters.domain.length)r=r.filter(n=>filters.domain.includes(n.domain));
+    if(filters.tags.length)r=r.filter(n=>n.tags.some(t=>filters.tags.includes(t)));
+    if(filters.importance.length)r=r.filter(n=>filters.importance.includes(n.importance));
+    if(filters.status.length)r=r.filter(n=>filters.status.includes(st[n.id]||'unchecked'));
+    if(filters.search)r=r.filter(n=>n.title.includes(filters.search)||n.summary?.includes(filters.search)||n.tags.some(t=>t.includes(filters.search)));
+    if(sort==='importance')r.sort((a,b)=>b.importance-a.importance);
+    else if(sort==='unmemorized'){const o={unchecked:0,difficult:1,review:2,memorized:3};const st2=loadStatuses();r.sort((a,b)=>(o[st2[a.id]||'unchecked'])-(o[st2[b.id]||'unchecked']));}
+    else if(sort==='random')r.sort(()=>Math.random()-.5);
+    else r.sort((a,b)=>b.created.localeCompare(a.created));
+    return r;
+  },[active,filters,sort,statuses]);
+
+  const handleSave=saved=>{
+    const exists=notes.find(n=>n.id===saved.id);
+    persist(exists?notes.map(n=>n.id===saved.id?saved:n):[saved,...notes]);
+    navigate('detail',saved);
+  };
+  const handleDelete=id=>{persist(notes.map(n=>n.id===id?{...n,deleted:true}:n));navigate('list');};
+  const handleRestore=id=>persist(notes.map(n=>n.id===id?{...n,deleted:false}:n));
+  const handlePermDel=idOrAll=>{
+    if(idOrAll==='all')persist(notes.filter(n=>!n.deleted));
+    else persist(notes.filter(n=>n.id!==idOrAll));
+  };
+
+  const trashCount=notes.filter(n=>n.deleted).length;
+  const curNote=sel?notes.find(n=>n.id===sel.id)||sel:null;
+
+  return(
+    <div style={{display:'flex',flexDirection:'column',height:'100vh',overflow:'hidden'}}>
+      <header style={{display:'flex',alignItems:'center',gap:12,padding:'0 18px',height:52,background:'#fff',borderBottom:'1px solid #E8E4DF',flexShrink:0,zIndex:10}}>
+        <div style={{display:'flex',alignItems:'center',gap:8,marginRight:4,cursor:'pointer'}} onClick={()=>navigate('list')}>
+          <div style={{width:30,height:30,background:'#4C6EF5',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+            <span style={{color:'#fff',fontSize:14,fontWeight:700}}>오</span>
+          </div>
+          <span style={{fontWeight:700,fontSize:15,color:'#1C1A17',whiteSpace:'nowrap'}}>기술사 오답노트</span>
+        </div>
+        {(view==='list'||view==='detail')&&(
+          <div style={{flex:1,maxWidth:440,position:'relative'}}>
+            <input type="text" placeholder="오답 검색..." value={filters.search}
+              onChange={e=>setFilters(f=>({...f,search:e.target.value}))}
+              style={{width:'100%',padding:'7px 12px 7px 32px',borderRadius:8,border:'1px solid #E2DDD8',background:'#F7F5F1',fontSize:13,color:'#1C1A17'}}/>
+            <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',color:'#B0AAA4',fontSize:14,pointerEvents:'none'}}>🔍</span>
+          </div>
+        )}
+        <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
+          {view==='list'&&<>
+            <span style={{fontSize:12,color:'#9B9590'}}>정렬</span>
+            <select value={sort} onChange={e=>setSort(e.target.value)} style={{fontSize:12,padding:'5px 8px',borderRadius:6,border:'1px solid #E2DDD8',background:'#fff',color:'#3D3A36',cursor:'pointer'}}>
+              <option value="recent">최근 작성순</option>
+              <option value="importance">중요도순</option>
+              <option value="unmemorized">미암기 우선</option>
+              <option value="random">랜덤</option>
+            </select>
+          </>}
+          <button type="button" onClick={()=>navigate('trash')} style={{padding:'6px 11px',borderRadius:7,background:'#F7F5F1',border:'1px solid #E2DDD8',fontSize:12,color:'#6B6560',fontWeight:500,display:'flex',alignItems:'center',gap:4}}>
+            🗑 휴지통{trashCount>0&&<span style={{background:'#E8E4DF',borderRadius:99,padding:'0 5px',fontSize:10,color:'#9B9590'}}>{trashCount}</span>}
+          </button>
+          <button type="button" onClick={()=>navigate('create')} style={{padding:'6px 14px',borderRadius:7,background:'#4C6EF5',color:'#fff',fontSize:13,fontWeight:600}}>
+            + 카드 추가
+          </button>
+        </div>
+      </header>
+
+      <div style={{flex:1,display:'flex',overflow:'hidden'}}>
+        {view==='list'&&<>
+          <div style={{borderRight:'1px solid #E8E4DF',background:'#FDFCFA',overflow:'auto',flexShrink:0}}>
+            <Sidebar notes={notes} filters={filters} setFilters={setFilters} statuses={statuses}/>
+          </div>
+          <div style={{flex:1,overflow:'auto',padding:20}}>
+            {filtered.length===0?(
+              <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',color:'#9B9590',gap:8}}>
+                <span style={{fontSize:40,opacity:.4}}>📭</span>
+                <p style={{fontSize:15,fontWeight:500}}>오답노트가 없습니다</p>
+                <p style={{fontSize:13}}>필터 조건을 변경하거나 새 카드를 추가해 보세요</p>
+              </div>
+            ):(
+              <>
+                <div style={{fontSize:12,color:'#9B9590',marginBottom:14}}>{filtered.length}개의 오답노트</div>
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(290px,1fr))',gap:12}}>
+                  {filtered.map(n=><NoteCard key={n.id} note={n} status={statuses[n.id]||'unchecked'} onClick={()=>navigate('detail',n)}/>)}
+                </div>
+              </>
+            )}
+          </div>
+          <div style={{borderLeft:'1px solid #E8E4DF',background:'#FDFCFA',flexShrink:0,overflow:'auto'}}>
+            <StatsPanel notes={notes} statuses={statuses} onStudy={()=>navigate('study')}/>
+          </div>
+        </>}
+        {view==='detail'&&curNote&&(
+          <DetailView note={curNote} status={statuses[curNote.id]||'unchecked'}
+            onBack={()=>navigate('list')} onStatusChange={handleStatus}
+            onEdit={()=>navigate('edit',curNote)} onDelete={()=>handleDelete(curNote.id)}/>
+        )}
+        {(view==='create'||view==='edit')&&(
+          <CardEditor note={view==='edit'?curNote:null} onSave={handleSave} onCancel={()=>navigate(curNote&&view==='edit'?'detail':'list',curNote&&view==='edit'?curNote:null)}/>
+        )}
+        {view==='trash'&&(
+          <TrashView notes={notes} onRestore={handleRestore} onPermDel={handlePermDel} onBack={()=>navigate('list')}/>
+        )}
+        {view==='study'&&(
+          <StudyMode notes={filtered.length>0?filtered:active} statuses={statuses} onEnd={()=>navigate('session-end')} onStatusChange={handleStatus}/>
+        )}
+        {view==='session-end'&&(
+          <SessionEnd notes={filtered.length>0?filtered:active} statuses={statuses} onRestart={()=>navigate('study')} onBack={()=>navigate('list')}/>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
