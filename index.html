@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -33,64 +34,63 @@ input,select,textarea{font-family:inherit;outline:none}
 <script>
 const DOMAINS=['소프트웨어 공학','데이터베이스','테스트','인공지능','경영컨설팅','빅데이터분석','보안','알고리즘','네트워크','UML','디자인패턴','프로젝트 관리','법제도','신기술','주간기술동향','CAOS','풀이문제'];
 
-const DEFAULT_NOTES=[
-  {id:'1',title:'정규화 제3정규형 vs 제2정규형 혼동',domain:'데이터베이스',tags:['정규화','3NF','함수종속'],importance:3,source:'2025년 1회 기출',created:'2026-06-15',
-   summary:'이행 함수 종속과 부분 함수 종속을 혼동하여 제3정규형 위반을 제2정규형으로 잘못 판단함',
-   problem:'릴레이션 R(학번, 과목코드, 성적, 학과, 학과장)에서 정규화 위반 여부와 해당 정규형을 판단하시오.\n\n함수 종속:\n- (학번, 과목코드) → 성적\n- 학번 → 학과\n- 학과 → 학과장',
-   content:'<p>제2정규형(2NF): <strong>부분 함수 종속 제거</strong>. (학번,과목코드)→성적은 완전 함수 종속이므로 2NF 만족.</p><p>제3정규형(3NF): <strong>이행 함수 종속 제거</strong>. 학번→학과→학과장이 이행 종속이라 3NF 위반. 학과 테이블을 분리해야 한다.</p><table><tr><th>정규형</th><th>제거 대상</th></tr><tr><td>1NF</td><td>원자값이 아닌 속성</td></tr><tr><td>2NF</td><td>부분 함수 종속</td></tr><tr><td>3NF</td><td>이행 함수 종속</td></tr><tr><td>BCNF</td><td>후보키가 아닌 결정자</td></tr></table>',
-   mnemonics:['제2NF: 복합 기본키 → 부분 함수 종속 제거','제3NF: 이행 함수 종속(A→B→C) 제거','BCNF: 모든 결정자가 후보키','2NF → 3NF → BCNF 순서로 강해진다'],
-   memo:'BCNF 분해 예시 + 무손실 분해 조건 함께 복습',deleted:false},
-  {id:'2',title:'프로세스 스케줄링 SJF 평균 대기시간 계산',domain:'알고리즘',tags:['스케줄링','SJF','간트차트'],importance:3,source:'2024년 2회 기출',created:'2026-06-14',
-   summary:'SJF(비선점)의 평균 대기시간 계산 오류. 간트 차트 없이 계산하다 실수',
-   problem:'도착시간 0,1,2,3의 프로세스 A,B,C,D의 실행시간이 8,4,9,5일 때 SJF 스케줄링의 평균 대기시간을 구하시오.',
-   content:'<p>SJF(비선점): 실행 중인 프로세스가 끝나야 다음 선택.</p><p><strong>간트차트:</strong> A(0~8) → B(8~12) → D(12~17) → C(17~26)</p><p>대기시간: A=0, B=8-1=<strong>7</strong>, D=12-3=<strong>9</strong>, C=17-2=<strong>15</strong></p><p>평균 = (0+7+9+15)/4 = <strong>7.75</strong></p>',
-   mnemonics:['SJF: 비선점, 완료 후 최단 작업 선택','SRTF: 선점형 SJF','간트 차트 없이 계산 금지 — 반드시 그리기'],
-   memo:'4-way handshake(연결 종료)도 함께 정리',deleted:false},
-  {id:'3',title:'TCP 3-way handshake 2단계 플래그',domain:'네트워크',tags:['TCP','handshake','프로토콜'],importance:2,source:'2025년 2회 기출',created:'2026-06-13',
-   summary:'2단계에서 서버가 SYN만 보내는 것으로 잘못 기술. SYN+ACK를 동시에 보냄',
-   problem:'TCP 연결 설정(3-way handshake) 과정의 각 단계 플래그와 시퀀스 번호를 기술하시오.',
-   content:'<p>1단계: 클라이언트→서버 <strong>SYN</strong>(seq=x)</p><p>2단계: 서버→클라이언트 <strong>SYN+ACK</strong>(seq=y, ack=x+1) ← 둘 다!</p><p>3단계: 클라이언트→서버 <strong>ACK</strong>(ack=y+1)</p>',
-   mnemonics:['1단계: SYN','2단계: SYN+ACK (둘 다!)','3단계: ACK','ACK번호 = 상대방 SEQ + 1'],
-   memo:'4-way handshake(연결 종료)도 함께 정리',deleted:false},
-  {id:'4',title:'팩토리 메서드 vs 추상 팩토리 패턴',domain:'디자인패턴',tags:['디자인패턴','GoF','생성패턴'],importance:2,source:'2025년 모의고사',created:'2026-06-12',
-   summary:'팩토리 메서드와 추상 팩토리를 동일한 패턴으로 혼동하여 설명',
-   problem:'팩토리 메서드 패턴과 추상 팩토리 패턴의 차이점을 설명하고 각각의 사용 예를 드시오.',
-   content:'<p><strong>팩토리 메서드</strong>: 서브클래스에서 어떤 클래스를 인스턴스화할지 결정. 단일 객체 생성 위임.</p><p><strong>추상 팩토리</strong>: 연관된 객체들의 집합(family)을 생성하는 인터페이스 제공. 플랫폼 독립.</p>',
-   mnemonics:['팩토리 메서드: 단일 객체, 서브클래스 위임','추상 팩토리: 객체 패밀리, 플랫폼 독립','GoF 23패턴 = 생성(5)+구조(7)+행위(11)'],
-   memo:'GoF 패턴 분류표 외우기',deleted:false},
-  {id:'5',title:'B-Tree vs Hash 인덱스 범위 검색',domain:'데이터베이스',tags:['인덱스','B-Tree','해시'],importance:1,source:'2024년 3회 기출',created:'2026-06-11',
-   summary:'해시 인덱스도 범위 검색에 효율적이라고 잘못 설명',
-   problem:'B-Tree 인덱스와 Hash 인덱스의 특징을 비교하고 각각에 적합한 쿼리 유형을 설명하시오.',
-   content:'<p><strong>Hash 인덱스</strong>: 등치 검색(=)만 O(1). 범위 검색 시 전체 스캔 필요.</p><p><strong>B-Tree 인덱스</strong>: 등치+범위+정렬 모두 지원 O(log n).</p>',
-   mnemonics:['Hash: O(1) 등치만, 범위 X','B-Tree: 등치+범위+정렬 O(log n)','InnoDB 기본 인덱스는 B+Tree'],
-   memo:'',deleted:false},
-  {id:'6',title:'UML Aggregation vs Composition 생명주기',domain:'UML',tags:['UML','클래스다이어그램','연관관계'],importance:2,source:'2025년 1회 기출',created:'2026-06-10',
-   summary:'집합(Aggregation)과 합성(Composition) 모두 생명주기를 함께한다고 잘못 설명',
-   problem:'UML 클래스 다이어그램에서 Aggregation과 Composition의 차이를 설명하시오.',
-   content:'<p><strong>Aggregation(집합)</strong>: 빈 다이아몬드 ◇. 부분 객체가 독립적으로 존재 가능. 예: Team◇Player</p><p><strong>Composition(합성)</strong>: 채워진 다이아몬드 ◆. 전체가 소멸하면 부분도 소멸. 예: Car◆Engine</p>',
-   mnemonics:['Aggregation: ◇ 빈, 독립 생명주기','Composition: ◆ 채워진, 공유 생명주기','Car◆Engine(합성), Team◇Player(집합)'],
-   memo:'기호와 예시 함께 암기',deleted:false},
-  {id:'7',title:'서브넷 /26 호스트 수 계산 오류',domain:'네트워크',tags:['IP','서브넷','CIDR'],importance:3,source:'2025년 2회 기출',created:'2026-06-09',
-   summary:'CIDR /26에서 네트워크/브로드캐스트 주소 2개 제외를 빠뜨리고 64로 계산',
-   problem:'192.168.1.0/26 서브넷의 사용 가능한 호스트 수와 브로드캐스트 주소를 구하시오.',
-   content:'<p>/26 → 서브넷 마스크 255.255.255.192. 2^(32-26)=64개 주소.</p><p>네트워크(.0)와 브로드캐스트(.63) 제외 → <strong>62개 호스트</strong></p><p>브로드캐스트: 192.168.1.63</p>',
-   mnemonics:['/26 → 64개 주소 → 62개 호스트','호스트 수 = 2^n - 2','브로드캐스트 = 해당 서브넷 마지막 주소','/24(254), /25(126), /26(62), /27(30), /28(14)'],
-   memo:'/24~28 표로 외우기',deleted:false},
-  {id:'8',title:'트랜잭션 ACID - 격리성 vs 일관성 혼동',domain:'데이터베이스',tags:['트랜잭션','ACID','격리성'],importance:2,source:'2024년 1회 기출',created:'2026-06-08',
-   summary:'격리성(Isolation)을 "트랜잭션 전후 데이터 일관성 유지"로 잘못 설명',
-   problem:'트랜잭션의 ACID 속성을 각각 설명하시오.',
-   content:'<p><strong>A(원자성)</strong>: All or Nothing</p><p><strong>C(일관성)</strong>: 무결성 제약조건 항상 유지</p><p><strong>I(격리성)</strong>: 트랜잭션 수행 중 다른 트랜잭션의 연산 불가 (독립 실행 보장)</p><p><strong>D(지속성)</strong>: 커밋 후 영구 저장</p>',
-   mnemonics:['원자성: All or Nothing','일관성: 무결성 제약조건 항상 유지','격리성: 다른 트랜잭션 간섭 없음','지속성: 커밋 후 영구 저장'],
-   memo:'ACID 각 영어 단어 뜻으로 연결해서 암기',deleted:false}
+const SAMPLE_NOTES=[
+  {id:'sample-itil-v4-svs',title:'ITIL v4.0 서비스 가치 시스템(SVS)과 서비스 가치 사슬',domain:'경영컨설팅',tags:['ITIL','SVS','서비스가치사슬'],importance:3,source:'정의 삑삑이 기존 카드',created:'2026-06-18',
+   summary:'ITIL v4.0의 SVS 구성과 서비스 가치 사슬 활동을 연결해서 암기',
+   problem:'ITIL v4.0의 서비스 가치 시스템(Service Value System, SVS) 구성요소와 서비스 가치 사슬(Service Value Chain) 활동을 설명하시오.',
+   content:'<p><strong>SVS(Service Value System)</strong>는 다양한 조직 요소와 활동을 통합·조정하여 가치 중심 방향성을 제공하고, 지속적으로 가치를 창출하는 체계다.</p><p><strong>SVS 구성:</strong> 기회/수요 → 서비스 가치사슬 → 가이드 원칙 → 거버넌스 → 관리 실행 → 지속적 개선 → 가치</p><p><strong>서비스 가치 사슬 활동:</strong> 계획, 참여, 설계 및 전환, 획득 및 구축, 운영, 개선</p><table><tr><th>구분</th><th>암기 포인트</th></tr><tr><td>SVS</td><td>기서가거지가</td></tr><tr><td>SVC</td><td>계참설획운개</td></tr><tr><td>가이드 원칙</td><td>가치 중심, 현재 상태 시작, 반복적 피드백, 협업과 투명성, 전체론적 사고, 단순·실용, 자동화 활용</td></tr></table>',
+   mnemonics:['SVS: 기서가거지가 = 기회/수요, 서비스 가치사슬, 가이드 원칙, 거버넌스, 관리 실행, 지속적 개선, 가치','SVC: 계참설획운개 = 계획, 참여, 설계 및 전환, 획득 및 구축, 운영, 개선','ITIL v4는 라이프사이클보다 가치 흐름과 지속적 개선을 강조'],
+   memo:'새 계정에 자동 제공되는 샘플 카드입니다. 수정하거나 삭제해도 내 계정에만 반영됩니다.',deleted:false}
 ];
 
 const NOTES_KEY='oa-notes-v2';
 const STATUS_KEY='oa-statuses';
-function loadNotes(){try{const s=localStorage.getItem(NOTES_KEY);if(s)return JSON.parse(s);}catch{}return DEFAULT_NOTES;}
+const SUPABASE_URL='https://svrvckvuwwucrynyqvqk.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_Dj7Krk3qMYW6iTN80sFihQ_rzw8ptRl';
+const API_BASE_URL='https://itpeflash-api.haorio.com';
+function cloneSampleNotes(){return JSON.parse(JSON.stringify(SAMPLE_NOTES));}
+function loadStoredNotes(){try{const s=localStorage.getItem(NOTES_KEY);if(s)return JSON.parse(s);}catch{}return null;}
+function loadNotes(){return loadStoredNotes()||cloneSampleNotes();}
 function saveNotes(n){localStorage.setItem(NOTES_KEY,JSON.stringify(n));}
 function loadStatuses(){try{return JSON.parse(localStorage.getItem(STATUS_KEY)||'{}')}catch{return{}}}
+function saveStatuses(s){localStorage.setItem(STATUS_KEY,JSON.stringify(s||{}));}
 function saveStatus(id,s){const a=loadStatuses();a[id]=s;localStorage.setItem(STATUS_KEY,JSON.stringify(a));}
 function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
+const SB_CLIENT=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}):null;
+async function apiFetch(path,options={},canRetry=true){
+  if(!SB_CLIENT)throw new Error('로그인 서비스를 사용할 수 없습니다.');
+  const {data,error}=await SB_CLIENT.auth.getSession();
+  if(error)throw error;
+  const accessToken=data?.session?.access_token;
+  if(!accessToken)throw new Error('로그인이 필요합니다.');
+  const headers={Accept:'application/json',Authorization:`Bearer ${accessToken}`,...(options.headers||{})};
+  if(options.body)headers['Content-Type']='application/json';
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),20000);
+  let response;
+  try{
+    response=await fetch(`${API_BASE_URL}${path}`,{...options,headers,signal:controller.signal});
+  }catch(error){
+    if(error?.name==='AbortError')throw new Error('NAS 데이터 서버 응답 시간이 초과되었습니다.');
+    throw error;
+  }finally{
+    clearTimeout(timer);
+  }
+  if(response.status===401&&canRetry){
+    const {data:refreshData,error:refreshError}=await SB_CLIENT.auth.refreshSession();
+    if(refreshError||!refreshData?.session)throw refreshError||new Error('로그인이 만료되었습니다.');
+    return apiFetch(path,options,false);
+  }
+  if(!response.ok){
+    let detail='';
+    try{
+      const body=await response.json();
+      detail=typeof body?.detail==='string'?body.detail:'';
+    }catch{}
+    throw new Error(detail||`NAS 데이터 요청 실패 (${response.status})`);
+  }
+  return response.status===204?null:response.json();
+}
 </script>
 <script type="text/babel">
 const {useState,useEffect,useRef,useMemo,useCallback}=React;
@@ -118,8 +118,12 @@ function RichEditor({value,onChange,placeholder,minHeight=200}){
   const ref=useRef(null);
   const savedRange=useRef(null);
   const inited=useRef(false);
-  const [selImg,setSelImg]=useState(null); // {el, rect, w}
-  const customPxRef=useRef(null);
+  const [selImg,setSelImg]=useState(null); // {el, w, sizeKey}
+  const IMG_PRESETS=[
+    {key:'small',label:'작게',width:'50%'},
+    {key:'default',label:'기본',width:'75%'},
+    {key:'large',label:'크게',width:'100%'},
+  ];
 
   useEffect(()=>{
     if(ref.current&&!inited.current){ref.current.innerHTML=value||'';inited.current=true;}
@@ -139,6 +143,7 @@ function RichEditor({value,onChange,placeholder,minHeight=200}){
   const getCleanHtml=()=>{
     if(!ref.current)return'';
     ref.current.querySelectorAll('img.img-sel').forEach(i=>i.classList.remove('img-sel'));
+    ref.current.querySelectorAll('img[data-upload-id]').forEach(i=>i.removeAttribute('data-upload-id'));
     return ref.current.innerHTML;
   };
 
@@ -151,13 +156,39 @@ function RichEditor({value,onChange,placeholder,minHeight=200}){
     savedRange.current=null;
   };
 
+  const imgSizeKey=img=>{
+    if(img.dataset.imgSize)return img.dataset.imgSize;
+    const width=img.style.width||'100%';
+    return IMG_PRESETS.find(p=>p.width===width)?.key||'custom';
+  };
+
+  const selectImage=img=>{
+    if(!ref.current||!img)return;
+    ref.current.querySelectorAll('img.img-sel').forEach(i=>i.classList.remove('img-sel'));
+    img.classList.add('img-sel');
+    setSelImg({el:img,w:img.style.width||'100%',sizeKey:imgSizeKey(img)});
+  };
+
   const insertImage=()=>{
     saveRange();
     const inp=document.createElement('input');inp.type='file';inp.accept='image/*';
     inp.onchange=e=>{
       const f=e.target.files[0];if(!f)return;
       const r=new FileReader();
-      r.onload=ev=>exec('insertHTML',`<img src="${ev.target.result}" style="width:100%;max-width:100%;height:auto;border-radius:6px;margin:4px 0"/>`);
+      r.onload=ev=>{
+        const uploadId='img-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+        const preset=IMG_PRESETS.find(p=>p.key==='default');
+        exec('insertHTML',`<img src="${ev.target.result}" data-img-size="${preset.key}" data-upload-id="${uploadId}" style="width:${preset.width};max-width:100%;height:auto;border-radius:6px;margin:4px 0"/>`);
+        requestAnimationFrame(()=>{
+          const img=ref.current?.querySelector(`img[data-upload-id="${uploadId}"]`);
+          if(!img)return;
+          img.removeAttribute('data-upload-id');
+          selectImage(img);
+          onChange(getCleanHtml());
+          img.classList.add('img-sel');
+          setSelImg({el:img,w:img.style.width||preset.width,sizeKey:preset.key});
+        });
+      };
       r.readAsDataURL(f);
     };
     inp.click();
@@ -165,29 +196,23 @@ function RichEditor({value,onChange,placeholder,minHeight=200}){
 
   const handleEditorClick=e=>{
     if(e.target.tagName==='IMG'){
-      const img=e.target;
-      ref.current.querySelectorAll('img.img-sel').forEach(i=>i.classList.remove('img-sel'));
-      img.classList.add('img-sel');
-      const rect=img.getBoundingClientRect();
-      const w=img.style.width||'100%';
-      setSelImg({el:img,rect,w});
+      selectImage(e.target);
     } else {
       ref.current.querySelectorAll('img.img-sel').forEach(i=>i.classList.remove('img-sel'));
       setSelImg(null);
     }
   };
 
-  const applyImgSize=w=>{
+  const applyImgSize=preset=>{
     if(!selImg)return;
-    selImg.el.style.width=w;
+    selImg.el.dataset.imgSize=preset.key;
+    selImg.el.style.width=preset.width;
     selImg.el.style.maxWidth='100%';
     selImg.el.style.height='auto';
     onChange(getCleanHtml());
     selImg.el.classList.add('img-sel');
-    setSelImg(prev=>({...prev,w,rect:prev.el.getBoundingClientRect()}));
+    setSelImg(prev=>({...prev,w:preset.width,sizeKey:preset.key}));
   };
-
-  const PRESETS=['25%','33%','50%','75%','100%'];
 
   const TBtn=({children,cmd,val,title})=>(
     <button type="button" title={title}
@@ -197,9 +222,6 @@ function RichEditor({value,onChange,placeholder,minHeight=200}){
     </button>
   );
   const Sep=()=><span style={{width:1,height:20,background:'#E2DDD8',display:'inline-block',margin:'0 2px',verticalAlign:'middle'}}/>;
-
-  const panelLeft=selImg?Math.min(selImg.rect.left,window.innerWidth-320):0;
-  const panelTop=selImg?selImg.rect.bottom+6:0;
 
   return(
     <div style={{border:'1px solid #E2DDD8',borderRadius:8,overflow:'hidden',background:'#fff'}}>
@@ -237,31 +259,26 @@ function RichEditor({value,onChange,placeholder,minHeight=200}){
         <Sep/>
         <TBtn cmd="removeFormat" title="서식 제거">지우기</TBtn>
       </div>
+      {selImg&&(
+        <div style={{display:'flex',alignItems:'center',gap:8,padding:'7px 10px',background:'#F0F4FF',borderBottom:'1px solid #C7D2FE',flexWrap:'wrap'}}>
+          <span style={{fontSize:11,fontWeight:700,color:'#4338CA',marginRight:2}}>이미지 크기</span>
+          <div role="group" aria-label="선택한 이미지 크기" style={{display:'inline-flex',gap:4,alignItems:'center'}}>
+            {IMG_PRESETS.map(p=>(
+              <button key={p.key} type="button" onMouseDown={e=>{e.preventDefault();applyImgSize(p);}}
+                style={{padding:'4px 10px',borderRadius:6,fontSize:12,fontWeight:700,cursor:'pointer',border:'1.5px solid',borderColor:selImg.sizeKey===p.key?'#4C6EF5':'#D5D0CA',background:selImg.sizeKey===p.key?'#4C6EF5':'#fff',color:selImg.sizeKey===p.key?'#fff':'#374151'}}>
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <button type="button" aria-label="이미지 선택 해제" onMouseDown={e=>{e.preventDefault();ref.current.querySelectorAll('img.img-sel').forEach(i=>i.classList.remove('img-sel'));setSelImg(null);}}
+            style={{marginLeft:'auto',fontSize:15,color:'#6B6560',lineHeight:1,background:'none',border:'none',cursor:'pointer',padding:'2px 4px'}}>×</button>
+        </div>
+      )}
       <div ref={ref} contentEditable className="re-area" data-ph={placeholder||'내용을 입력하세요...'}
         onInput={()=>onChange(getCleanHtml())}
         onBlur={saveRange}
         onClick={handleEditorClick}
         style={{minHeight,padding:'14px 16px',fontSize:14,lineHeight:1.8,color:'#1C1A17',outline:'none',overflowY:'auto',maxHeight:480}}/>
-      {selImg&&(
-        <div style={{position:'fixed',top:panelTop,left:panelLeft,background:'#fff',border:'1px solid #C7D2FE',borderRadius:10,padding:'8px 12px',boxShadow:'0 6px 24px rgba(0,0,0,0.14)',display:'flex',flexWrap:'wrap',gap:6,alignItems:'center',zIndex:2000,maxWidth:340}}>
-          <span style={{fontSize:11,fontWeight:700,color:'#4338CA',marginRight:4}}>🖼 이미지 크기</span>
-          {PRESETS.map(w=>(
-            <button key={w} type="button" onMouseDown={e=>{e.preventDefault();applyImgSize(w);}}
-              style={{padding:'3px 9px',borderRadius:6,fontSize:11,fontWeight:600,cursor:'pointer',border:'1.5px solid',borderColor:selImg.w===w?'#4C6EF5':'#E2DDD8',background:selImg.w===w?'#4C6EF5':'#F8F6F2',color:selImg.w===w?'#fff':'#374151'}}>
-              {w}
-            </button>
-          ))}
-          <div style={{display:'flex',alignItems:'center',gap:4,marginLeft:2}}>
-            <input ref={customPxRef} type="number" placeholder="px" min="40" max="1600"
-              style={{width:58,padding:'3px 6px',borderRadius:6,border:'1px solid #E2DDD8',fontSize:11,color:'#1C1A17'}}
-              onKeyDown={e=>{if(e.key==='Enter'&&e.target.value){applyImgSize(e.target.value+'px');}}}/>
-            <button type="button" onMouseDown={e=>{e.preventDefault();if(customPxRef.current?.value)applyImgSize(customPxRef.current.value+'px');}}
-              style={{padding:'3px 8px',borderRadius:6,fontSize:11,fontWeight:600,background:'#E8E4DF',color:'#6B6560',border:'none',cursor:'pointer'}}>적용</button>
-          </div>
-          <button type="button" onMouseDown={e=>{e.preventDefault();ref.current.querySelectorAll('img.img-sel').forEach(i=>i.classList.remove('img-sel'));setSelImg(null);}}
-            style={{marginLeft:'auto',fontSize:15,color:'#9B9590',lineHeight:1,background:'none',border:'none',cursor:'pointer',padding:'0 2px'}}>×</button>
-        </div>
-      )}
     </div>
   );
 }
@@ -595,7 +612,7 @@ function StudyMode({notes,statuses,onEnd,onStatusChange}){
           <div>
             {note.content&&<div style={{padding:'14px 16px',background:'#F0FDF4',borderRadius:10,marginBottom:12,borderLeft:'3px solid #22C55E'}}>
               <div style={{fontSize:11,fontWeight:600,color:'#15803D',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.06em'}}>내용</div>
-              <div style={{fontSize:14,lineHeight:1.75}} dangerouslySetInnerHTML={{__html:note.content}}/>
+              <div className="rc" style={{fontSize:14,lineHeight:1.75}} dangerouslySetInnerHTML={{__html:note.content}}/>
             </div>}
             {note.mnemonics&&note.mnemonics.length>0&&<div style={{padding:'14px 16px',background:'#F5F0FF',borderRadius:10,marginBottom:18}}>
               <div style={{fontSize:11,fontWeight:600,color:'#4338CA',marginBottom:6,textTransform:'uppercase',letterSpacing:'0.06em'}}>암기두음</div>
@@ -656,6 +673,65 @@ function SessionEnd({notes,statuses,onRestart,onBack}){
   );
 }
 
+/* ── Auth Gate ───────────────────────── */
+function AuthGate({authReady,authMode,setAuthMode,email,setEmail,password,setPassword,passwordConfirm,setPasswordConfirm,isAuthBusy,authMessage,authMessageIsError,onSubmit}){
+  const isSignup=authMode==='signup';
+  const shell={minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:24,background:'#F7F5F1'};
+  const card={width:'100%',maxWidth:420,background:'#fff',border:'1px solid #E8E4DF',borderRadius:12,padding:28,boxShadow:'0 14px 40px rgba(28,26,23,.08)'};
+  const input={width:'100%',padding:'11px 13px',borderRadius:8,border:'1px solid #E2DDD8',background:'#FDFCFA',fontSize:14,color:'#1C1A17'};
+  const label={display:'flex',flexDirection:'column',gap:6,fontSize:12,fontWeight:700,color:'#6B6560'};
+  const tab=active=>({flex:1,padding:'8px 10px',borderRadius:7,fontSize:13,fontWeight:700,background:active?'#4C6EF5':'#F0EDE8',color:active?'#fff':'#6B6560'});
+  return(
+    <main style={shell}>
+      <section style={card} aria-label="계정 로그인">
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:18}}>
+          <div style={{width:36,height:36,background:'#4C6EF5',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:800}}>오</div>
+          <div>
+            <h1 style={{fontSize:20,fontWeight:800,color:'#1C1A17',lineHeight:1.25}}>기술사 오답노트</h1>
+            <p style={{fontSize:13,color:'#9B9590',marginTop:2}}>내 카드와 암기 상태를 계정별로 관리합니다.</p>
+          </div>
+        </div>
+        {!SB_CLIENT?(
+          <p style={{padding:12,borderRadius:8,background:'#FEF2F2',color:'#B91C1C',fontSize:13,fontWeight:600}}>로그인 서비스를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
+        ):!authReady?(
+          <p style={{padding:12,borderRadius:8,background:'#F8F6F2',color:'#6B6560',fontSize:13}}>로그인 정보를 확인하는 중입니다...</p>
+        ):(
+          <>
+            <div style={{display:'flex',gap:6,padding:4,background:'#F8F6F2',borderRadius:9,marginBottom:18}}>
+              <button type="button" onClick={()=>setAuthMode('signin')} style={tab(!isSignup)}>로그인</button>
+              <button type="button" onClick={()=>setAuthMode('signup')} style={tab(isSignup)}>회원가입</button>
+            </div>
+            <form onSubmit={onSubmit} style={{display:'flex',flexDirection:'column',gap:13}}>
+              <label style={label}>이메일
+                <input type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="name@example.com" required style={input}/>
+              </label>
+              <label style={label}>비밀번호
+                <input type="password" autoComplete={isSignup?'new-password':'current-password'} value={password} onChange={e=>setPassword(e.target.value)} placeholder="비밀번호" required minLength={6} style={input}/>
+              </label>
+              {isSignup&&(
+                <label style={label}>비밀번호 확인
+                  <input type="password" autoComplete="new-password" value={passwordConfirm} onChange={e=>setPasswordConfirm(e.target.value)} placeholder="비밀번호 확인" required minLength={6} style={input}/>
+                </label>
+              )}
+              <button type="submit" disabled={isAuthBusy} style={{marginTop:4,padding:'11px 14px',borderRadius:8,background:isAuthBusy?'#9CA3AF':'#4C6EF5',color:'#fff',fontSize:14,fontWeight:800}}>
+                {isAuthBusy?'처리 중...':isSignup?'새 계정 만들기':'로그인'}
+              </button>
+            </form>
+            <p style={{fontSize:12,color:'#9B9590',lineHeight:1.6,marginTop:14}}>
+              새 계정에는 ITIL v4.0 서비스 가치 사슬 샘플 카드가 자동으로 들어갑니다.
+            </p>
+          </>
+        )}
+        {authMessage&&(
+          <p style={{marginTop:14,padding:11,borderRadius:8,background:authMessageIsError?'#FEF2F2':'#F0FDF4',color:authMessageIsError?'#B91C1C':'#15803D',fontSize:13,fontWeight:600}}>
+            {authMessage}
+          </p>
+        )}
+      </section>
+    </main>
+  );
+}
+
 /* ── App ─────────────────────────────── */
 function App(){
   const [notes,setNotes]=useState(loadNotes);
@@ -664,9 +740,21 @@ function App(){
   const [statuses,setStatuses]=useState(loadStatuses);
   const [filters,setFilters]=useState({domain:[],tags:[],importance:[],status:[],search:''});
   const [sort,setSort]=useState('recent');
+  const [authReady,setAuthReady]=useState(!SB_CLIENT);
+  const [session,setSession]=useState(null);
+  const [authMode,setAuthMode]=useState('signin');
+  const [email,setEmail]=useState('');
+  const [password,setPassword]=useState('');
+  const [passwordConfirm,setPasswordConfirm]=useState('');
+  const [isAuthBusy,setIsAuthBusy]=useState(false);
+  const [authMessage,setAuthMessage]=useState('');
+  const [authMessageIsError,setAuthMessageIsError]=useState(false);
+  const [syncStatus,setSyncStatus]=useState(SB_CLIENT?'로그인이 필요합니다':'로컬 저장 모드');
 
   const notesRef=useRef(notes);
   useEffect(()=>{notesRef.current=notes;},[notes]);
+  const remoteReadyRef=useRef(false);
+  const remoteSaveTimer=useRef(null);
 
   const navigate=useCallback((v,s=null)=>{
     window.history.pushState({view:v,selId:s?.id||null},'');
@@ -684,20 +772,191 @@ function App(){
     return()=>window.removeEventListener('popstate',h);
   },[]);
 
-  const persist=n=>{setNotes(n);saveNotes(n);};
-  const handleStatus=(id,s)=>{saveStatus(id,s);setStatuses(loadStatuses());};
+  useEffect(()=>{
+    if(!SB_CLIENT){setAuthReady(true);return;}
+    let alive=true;
+    SB_CLIENT.auth.getSession().then(({data,error})=>{
+      if(!alive)return;
+      if(error){
+        setAuthMessageIsError(true);
+        setAuthMessage('로그인 정보를 확인하지 못했습니다.');
+      }
+      setSession(data?.session||null);
+      setAuthReady(true);
+    });
+    const {data:{subscription}}=SB_CLIENT.auth.onAuthStateChange((_event,nextSession)=>{
+      setSession(nextSession);
+      setAuthReady(true);
+      if(nextSession){
+        setAuthMessage('');
+        setAuthMessageIsError(false);
+      }
+    });
+    return()=>{alive=false;subscription.unsubscribe();};
+  },[]);
+
+  const writeRemote=useCallback(async(nextNotes,nextStatuses)=>{
+    if(!SB_CLIENT)return;
+    const payload={
+      version:1,
+      notes:nextNotes,
+      statuses:nextStatuses||{},
+      updatedAt:new Date().toISOString(),
+    };
+    return apiFetch('/v1/data',{
+      method:'PUT',
+      body:JSON.stringify(payload),
+    });
+  },[]);
+
+  const queueRemoteSave=useCallback((nextNotes,nextStatuses)=>{
+    saveNotes(nextNotes);
+    saveStatuses(nextStatuses||{});
+    if(!session?.user?.id||!remoteReadyRef.current||!SB_CLIENT)return;
+    clearTimeout(remoteSaveTimer.current);
+    setSyncStatus('NAS DB 저장 대기 중...');
+    remoteSaveTimer.current=setTimeout(async()=>{
+      try{
+        setSyncStatus('NAS DB에 저장 중...');
+        await writeRemote(nextNotes,nextStatuses||{});
+        setSyncStatus('NAS DB에 저장됨');
+      }catch(error){
+        setSyncStatus('NAS DB 저장 실패 - 로컬에는 저장됨');
+        console.error(error);
+      }
+    },450);
+  },[session?.user?.id,writeRemote]);
+
+  useEffect(()=>()=>clearTimeout(remoteSaveTimer.current),[]);
+
+  useEffect(()=>{
+    if(!authReady||!session?.user?.id||!SB_CLIENT)return;
+    let alive=true;
+    async function loadAccountData(){
+      remoteReadyRef.current=false;
+      setSyncStatus('NAS DB 데이터 불러오는 중...');
+      try{
+        const accountPayload=await apiFetch('/v1/data');
+        let nextNotes=accountPayload?.notes;
+        let nextStatuses=accountPayload?.statuses||{};
+        let seeded=false;
+        if(!Array.isArray(nextNotes)||nextNotes.length===0){
+          const sampleNotes=cloneSampleNotes();
+          const localNotes=loadStoredNotes();
+          if(Array.isArray(localNotes)&&localNotes.length>0){
+            const localIds=new Set(localNotes.map(n=>n.id));
+            nextNotes=[...sampleNotes.filter(n=>!localIds.has(n.id)),...localNotes];
+            nextStatuses=loadStatuses();
+            seeded=nextNotes.length!==localNotes.length;
+          }else{
+            nextNotes=sampleNotes;
+            nextStatuses={};
+            seeded=true;
+          }
+        }
+        if(!alive)return;
+        setNotes(nextNotes);
+        setStatuses(nextStatuses);
+        saveNotes(nextNotes);
+        saveStatuses(nextStatuses);
+        remoteReadyRef.current=true;
+        if(!Array.isArray(accountPayload?.notes)||accountPayload.notes.length===0){
+          setSyncStatus(seeded?'샘플 카드를 NAS DB에 저장 중...':'로컬 카드를 NAS DB로 가져오는 중...');
+          await writeRemote(nextNotes,nextStatuses);
+        }
+        if(alive)setSyncStatus('NAS DB 데이터 동기화됨');
+      }catch(error){
+        if(!alive)return;
+        remoteReadyRef.current=false;
+        setSyncStatus('NAS DB 연결 실패 - 로컬 저장만 사용 중');
+        console.error(error);
+      }
+    }
+    loadAccountData();
+    return()=>{alive=false;};
+  },[authReady,session?.user?.id,writeRemote]);
+
+  const persist=(nextNotes,nextStatuses=statuses)=>{
+    setNotes(nextNotes);
+    setStatuses(nextStatuses);
+    queueRemoteSave(nextNotes,nextStatuses);
+  };
+  const handleStatus=(id,s)=>{
+    const nextStatuses={...statuses,[id]:s};
+    setStatuses(nextStatuses);
+    queueRemoteSave(notes,nextStatuses);
+  };
+
+  const handleAuthSubmit=async e=>{
+    e.preventDefault();
+    if(!SB_CLIENT)return;
+    setIsAuthBusy(true);
+    setAuthMessage('');
+    setAuthMessageIsError(false);
+    try{
+      if(authMode==='signup'){
+        if(password!==passwordConfirm)throw new Error('비밀번호 확인이 일치하지 않습니다.');
+        const {data,error}=await SB_CLIENT.auth.signUp({
+          email,
+          password,
+          options:{emailRedirectTo:`${window.location.origin}${window.location.pathname}`},
+        });
+        if(error)throw error;
+        if(data.session){
+          setAuthMessage('회원가입과 로그인이 완료되었습니다.');
+        }else{
+          setPassword('');
+          setPasswordConfirm('');
+          setAuthMode('signin');
+          setAuthMessage('회원가입이 접수되었습니다.');
+        }
+      }else{
+        const {error}=await SB_CLIENT.auth.signInWithPassword({email,password});
+        if(error)throw error;
+        setAuthMessage('로그인되었습니다.');
+      }
+    }catch(error){
+      setAuthMessageIsError(true);
+      setAuthMessage(error instanceof Error?error.message:'인증 중 오류가 발생했습니다.');
+    }finally{
+      setIsAuthBusy(false);
+    }
+  };
+
+  const handleSignOut=async()=>{
+    if(!SB_CLIENT)return;
+    setIsAuthBusy(true);
+    try{
+      clearTimeout(remoteSaveTimer.current);
+      await SB_CLIENT.auth.signOut({scope:'local'});
+      remoteReadyRef.current=false;
+      setSession(null);
+      setPassword('');
+      setPasswordConfirm('');
+      setNotes(cloneSampleNotes());
+      setStatuses({});
+      setView('list');
+      setSel(null);
+      setSyncStatus('로그인이 필요합니다');
+    }catch(error){
+      setAuthMessageIsError(true);
+      setAuthMessage(error instanceof Error?error.message:'로그아웃 중 오류가 발생했습니다.');
+    }finally{
+      setIsAuthBusy(false);
+    }
+  };
 
   const active=useMemo(()=>notes.filter(n=>!n.deleted),[notes]);
   const filtered=useMemo(()=>{
     let r=[...active];
-    const st=loadStatuses();
+    const st=statuses;
     if(filters.domain.length)r=r.filter(n=>filters.domain.includes(n.domain));
     if(filters.tags.length)r=r.filter(n=>n.tags.some(t=>filters.tags.includes(t)));
     if(filters.importance.length)r=r.filter(n=>filters.importance.includes(n.importance));
     if(filters.status.length)r=r.filter(n=>filters.status.includes(st[n.id]||'unchecked'));
     if(filters.search)r=r.filter(n=>n.title.includes(filters.search)||n.summary?.includes(filters.search)||n.tags.some(t=>t.includes(filters.search)));
     if(sort==='importance')r.sort((a,b)=>b.importance-a.importance);
-    else if(sort==='unmemorized'){const o={unchecked:0,difficult:1,review:2,memorized:3};const st2=loadStatuses();r.sort((a,b)=>(o[st2[a.id]||'unchecked'])-(o[st2[b.id]||'unchecked']));}
+    else if(sort==='unmemorized'){const o={unchecked:0,difficult:1,review:2,memorized:3};const st2=statuses;r.sort((a,b)=>(o[st2[a.id]||'unchecked'])-(o[st2[b.id]||'unchecked']));}
     else if(sort==='random')r.sort(()=>Math.random()-.5);
     else r.sort((a,b)=>b.created.localeCompare(a.created));
     return r;
@@ -717,6 +976,14 @@ function App(){
 
   const trashCount=notes.filter(n=>n.deleted).length;
   const curNote=sel?notes.find(n=>n.id===sel.id)||sel:null;
+
+  if(!authReady||!session){
+    return <AuthGate authReady={authReady} authMode={authMode} setAuthMode={setAuthMode}
+      email={email} setEmail={setEmail} password={password} setPassword={setPassword}
+      passwordConfirm={passwordConfirm} setPasswordConfirm={setPasswordConfirm}
+      isAuthBusy={isAuthBusy} authMessage={authMessage} authMessageIsError={authMessageIsError}
+      onSubmit={handleAuthSubmit}/>;
+  }
 
   return(
     <div style={{display:'flex',flexDirection:'column',height:'100vh',overflow:'hidden'}}>
@@ -750,6 +1017,11 @@ function App(){
           </button>
           <button type="button" onClick={()=>navigate('create')} style={{padding:'6px 14px',borderRadius:7,background:'#4C6EF5',color:'#fff',fontSize:13,fontWeight:600}}>
             + 카드 추가
+          </button>
+          <span title={session.user.email||''} style={{maxWidth:150,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontSize:12,color:'#6B6560'}}>{session.user.email}</span>
+          <span style={{fontSize:11,color:'#9B9590',whiteSpace:'nowrap'}}>{syncStatus}</span>
+          <button type="button" onClick={handleSignOut} disabled={isAuthBusy} style={{padding:'6px 11px',borderRadius:7,background:'#F0EDE8',color:'#6B6560',fontSize:12,fontWeight:700}}>
+            {isAuthBusy?'처리 중':'로그아웃'}
           </button>
         </div>
       </header>

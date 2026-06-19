@@ -1,7 +1,8 @@
 # itpeflash.haorio.com - 기술사 오답 노트
 
 ## Overview
-기술사 시험 대비 오답 노트 앱. React 18 (CDN) + Babel. localStorage 기반 CRUD. Obsidian 연동 가능.
+기술사 시험 대비 오답 노트 앱. React 18 (CDN) + Babel. Supabase Auth 로그인,
+NAS FastAPI/PostgreSQL 계정 데이터, localStorage 캐시 CRUD. Obsidian 연동 가능.
 
 **URL:** https://itpeflash.haorio.com
 **GitHub:** https://github.com/Haorio-Lab/itpeflash.haorio.com.git
@@ -10,8 +11,12 @@
 ## Tech Stack
 - React 18.3.1 (CDN)
 - Babel standalone
+- Supabase JS v2 UMD (CDN)
 - contenteditable + document.execCommand (rich text editor)
-- localStorage (NOTES_KEY='oa-notes-v2', STATUS_KEY='oa-statuses')
+- Supabase Auth (email/password)
+- NAS FastAPI (`https://itpeflash-api.haorio.com`)
+- NAS PostgreSQL (`itpeflash_` prefixed tables)
+- localStorage cache (NOTES_KEY='oa-notes-v2', STATUS_KEY='oa-statuses')
 - History API (browser back support)
 - Cloudflare Pages deployment
 
@@ -48,6 +53,27 @@ localStorage['oa-notes-v2'] = JSON.stringify([...notes])
 localStorage['oa-statuses'] = JSON.stringify({[noteId]: status})
 ```
 
+### NAS API Storage Shape
+Supabase는 로그인과 access token 발급에만 사용한다. 브라우저는 access token을 Bearer
+헤더로 NAS API에 전달하고, 카드와 상태는 NAS PostgreSQL에 저장한다.
+
+```javascript
+GET/PUT https://itpeflash-api.haorio.com/v1/data
+{
+  version: 1,
+  notes: [...Note],
+  statuses: {[noteId]: "unchecked"|"memorized"|"review"|"difficult"},
+  updatedAt: ISO timestamp
+}
+```
+
+- Browser writes use the Supabase public publishable key for login and the user's access token for
+  NAS API authorization. Supabase service key is not exposed to the browser or NAS API.
+- localStorage remains a cache and fallback, not the source of truth after login.
+- On first login with no NAS cards, the app seeds an ITIL v4.0 sample card. If legacy local cards
+  exist in the same browser, the sample is prepended and local cards are imported.
+- API `PUT` is non-destructive: omitted DB rows are not deleted. App deletion uses `deleted: true`.
+
 ### 17 Fixed Domains
 ```
 소프트웨어 공학, 데이터베이스, 테스트, 인공지능, 경영컨설팅, 빅데이터분석, 보안,
@@ -68,12 +94,12 @@ CAOS, 풀이문제
 function RichEditor({value, onChange, placeholder, minHeight=200}) {
   // contenteditable div with toolbar
   // execCommand: bold, italic, underline, fontSize, foreColor, backColor, insertUnorderedList, etc
-  // image resize: click img → floating panel with % presets + custom px
-  // getCleanHtml(): strips img-sel class before save
+  // image resize: upload/click img → inline segmented control (small/default/large)
+  // getCleanHtml(): strips img-sel and transient upload id before save
 }
 ```
 - Toolbar: B/I/U + 크기 + 색상 + 배경 + 목록 + 이미지 + 수평선
-- 이미지 리사이즈: 클릭 → floating panel, getBoundingClientRect() 기반 위치, % 또는 px 입력
+- 이미지 리사이즈: 클릭/업로드 → 작게(50%) / 기본(75%) / 크게(100%)
 
 ### Screens
 
@@ -81,6 +107,12 @@ function RichEditor({value, onChange, placeholder, minHeight=200}) {
 - 카드 그리드, 도메인별 색상, 상태 표시
 - 각 카드: 토픽(title+problem 병합) + 내용 요약(HTML 렌더링)
 - 상태 메뉴 (3점), 삭제/수정 버튼
+
+**0. Auth Gate**
+- 이메일/비밀번호 로그인
+- 회원가입
+- 신규 계정 샘플 카드 제공 안내
+- 비로그인 사용자는 앱 본문에 진입하지 않음
 
 **2. Detail View**
 - 4개 섹션: 토픽 | 내용 | 암기두음 | 메모
@@ -185,8 +217,15 @@ npm run deploy:itpeflash
 - **Fixed:** added `.rc` class to all `dangerouslySetInnerHTML` divs + CSS rules
 
 ### Image Sizing
-- Images defaulted to 100% width
-- **Fixed:** click-to-select + floating panel with resize presets
+- Images default to 75% width
+- **Fixed:** upload/click-to-select + inline size segmented control
+
+### Account Data Sync
+- Requires Supabase Auth email/password to be enabled.
+- `_headers` CSP `connect-src` includes Supabase and `itpeflash-api.haorio.com`.
+- `_headers` CSP `img-src` includes `study.haorio.com` for imported Jumo images.
+- NAS API validates Supabase JWT through the project's public JWKS endpoint.
+- API code and migration instructions: `services/itpeflash-api/README.md`.
 
 ### Obsidian WebDAV
 - Partial write crashes leave `.tmp` files
@@ -195,9 +234,10 @@ npm run deploy:itpeflash
 
 ## Performance Notes
 - Card list can grow large (no pagination yet)
-- consider infinite scroll or pagination if >100 cards
+- 1,643 imported cards are loaded as one snapshot; consider pagination or virtual scrolling if
+  browser rendering becomes slow.
 - localStorage has ~5-10MB limit (JSON serialization)
-- For large datasets: migrate to IndexedDB or Supabase
+- NAS PostgreSQL is the source of truth; localStorage failure must not block remote reads.
 
 ## Code Architecture
 ```
@@ -206,11 +246,14 @@ App (main state)
 ├── DetailView (selected note)
 ├── CardEditor (create/edit)
 ├── StudyMode (single-card learning)
+├── AuthGate (email/password auth)
 └── RichEditor (contenteditable + toolbar)
 ```
 
 ## Next Steps / Future Work
 - [ ] Obsidian auto-sync (watch file, pull MD → parse → localStorage)
+- [ ] Dedicated `itpeflash_notes` and `itpeflash_statuses` tables if multi-device conflict handling or large datasets become important
+- [ ] Supabase Storage image upload instead of base64 data URLs in card HTML
 - [ ] Pagination / infinite scroll
 - [ ] Search / filter by domain / tags
 - [ ] Export to PDF
@@ -223,6 +266,8 @@ App (main state)
 2. **Domain list (17 items)** — app depends on fixed set
 3. **RichEditor HTML clean** — stripping img-sel class
 4. **History API state** — affects browser back behavior
+5. **Supabase metadata key** — `itpeflash_notes_v1` identifies each user's itpeflash data
+6. **CSP connect-src** — must allow the Supabase project URL for auth/database sync
 
 ---
 **Last updated:** 2026-06-18  
