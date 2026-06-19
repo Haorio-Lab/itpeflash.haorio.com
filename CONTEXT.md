@@ -22,8 +22,10 @@ NAS FastAPI/PostgreSQL 계정 데이터, localStorage 캐시 CRUD. Obsidian 연�
 
 ## File Structure
 ```
-index.html      (720 lines) — complete app
-_headers        — CSP, security headers
+index.html                 — complete app
+_headers                   — CSP, security headers
+scripts/deploy-pages.mjs   — frontend-only Cloudflare Pages staging/deploy
+services/itpeflash-api/    — NAS FastAPI, Dockerfile, migration, bundled seed data
 ```
 
 ## Data Model
@@ -206,9 +208,12 @@ Obsidian vault 읽기 시:
 
 ## Deployment
 ```bash
-npm run deploy:itpeflash
-# → npx wrangler pages deploy sites/itpeflash --project-name=haorio-itpeflash --branch=main --commit-dirty=true
+node scripts/deploy-pages.mjs
+# monorepo root: npm run deploy:itpeflash
 ```
+
+배포 스크립트는 `.pages-dist`에 `index.html`, `_headers`만 복사한 후 배포한다.
+`services/itpeflash-api`의 Python, SQL, seed 파일은 Pages 정적 자산에 포함하지 않는다.
 
 ## Known Issues & Gotchas
 
