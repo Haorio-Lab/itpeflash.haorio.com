@@ -95,40 +95,42 @@ class SnapshotRepository:
                     (user.id, user.email, now),
                 )
                 if note_rows:
-                    connection.executemany(
-                        """
-                        INSERT INTO itpeflash_notes (
-                            user_id,
-                            note_id,
-                            note_data,
-                            source_kind,
-                            source_key,
-                            position,
-                            user_modified
+                    with connection.cursor() as cur:
+                        cur.executemany(
+                            """
+                            INSERT INTO itpeflash_notes (
+                                user_id,
+                                note_id,
+                                note_data,
+                                source_kind,
+                                source_key,
+                                position,
+                                user_modified
+                            )
+                            VALUES (%s, %s, %s, 'user', %s, %s, FALSE)
+                            ON CONFLICT (user_id, note_id) DO UPDATE
+                            SET note_data = EXCLUDED.note_data,
+                                position = EXCLUDED.position,
+                                user_modified = (
+                                    itpeflash_notes.user_modified
+                                    OR itpeflash_notes.note_data IS DISTINCT FROM EXCLUDED.note_data
+                                ),
+                                updated_at = NOW()
+                            """,
+                            note_rows,
                         )
-                        VALUES (%s, %s, %s, 'user', %s, %s, FALSE)
-                        ON CONFLICT (user_id, note_id) DO UPDATE
-                        SET note_data = EXCLUDED.note_data,
-                            position = EXCLUDED.position,
-                            user_modified = (
-                                itpeflash_notes.user_modified
-                                OR itpeflash_notes.note_data IS DISTINCT FROM EXCLUDED.note_data
-                            ),
-                            updated_at = NOW()
-                        """,
-                        note_rows,
-                    )
                 if status_rows:
-                    connection.executemany(
-                        """
-                        INSERT INTO itpeflash_statuses (user_id, note_id, status)
-                        VALUES (%s, %s, %s)
-                        ON CONFLICT (user_id, note_id) DO UPDATE
-                        SET status = EXCLUDED.status,
-                            updated_at = NOW()
-                        """,
-                        status_rows,
-                    )
+                    with connection.cursor() as cur:
+                        cur.executemany(
+                            """
+                            INSERT INTO itpeflash_statuses (user_id, note_id, status)
+                            VALUES (%s, %s, %s)
+                            ON CONFLICT (user_id, note_id) DO UPDATE
+                            SET status = EXCLUDED.status,
+                                updated_at = NOW()
+                            """,
+                            status_rows,
+                        )
 
         # The API intentionally never removes rows omitted from a client snapshot.
         return self.load(user)

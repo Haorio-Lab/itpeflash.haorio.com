@@ -173,32 +173,33 @@ def seed_cards(
             )
         )
 
-    connection.executemany(
-        """
-        INSERT INTO itpeflash_notes (
-            user_id,
-            note_id,
-            note_data,
-            source_kind,
-            source_key,
-            source_hash,
-            position,
-            user_modified
+    with connection.cursor() as cur:
+        cur.executemany(
+            """
+            INSERT INTO itpeflash_notes (
+                user_id,
+                note_id,
+                note_data,
+                source_kind,
+                source_key,
+                source_hash,
+                position,
+                user_modified
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, FALSE)
+            ON CONFLICT (user_id, note_id) DO UPDATE
+            SET note_data = EXCLUDED.note_data,
+                source_kind = EXCLUDED.source_kind,
+                source_key = EXCLUDED.source_key,
+                source_hash = EXCLUDED.source_hash,
+                position = EXCLUDED.position,
+                updated_at = NOW()
+            WHERE itpeflash_notes.source_kind <> 'user'
+              AND NOT itpeflash_notes.user_modified
+              AND itpeflash_notes.source_hash IS DISTINCT FROM EXCLUDED.source_hash
+            """,
+            rows,
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, FALSE)
-        ON CONFLICT (user_id, note_id) DO UPDATE
-        SET note_data = EXCLUDED.note_data,
-            source_kind = EXCLUDED.source_kind,
-            source_key = EXCLUDED.source_key,
-            source_hash = EXCLUDED.source_hash,
-            position = EXCLUDED.position,
-            updated_at = NOW()
-        WHERE itpeflash_notes.source_kind <> 'user'
-          AND NOT itpeflash_notes.user_modified
-          AND itpeflash_notes.source_hash IS DISTINCT FROM EXCLUDED.source_hash
-        """,
-        rows,
-    )
     return inserted, updated, preserved
 
 
