@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .auth import SupabaseTokenVerifier, create_current_user_dependency
 from .config import Settings
 from .db import SnapshotRepository
-from .models import AuthenticatedUser, Snapshot
+from .models import AuthenticatedUser, ShareCreate, ShareResponse, Snapshot
 
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         CORSMiddleware,
         allow_origins=list(settings.allowed_origins),
         allow_credentials=False,
-        allow_methods=["GET", "PUT", "OPTIONS"],
+        allow_methods=["GET", "POST", "PUT", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type"],
     )
 
@@ -76,6 +76,42 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Data store is unavailable",
             ) from None
+
+    @app.post("/v1/shares", response_model=ShareResponse)
+    def create_share(
+        share: ShareCreate,
+        user: AuthenticatedUser = Depends(current_user),
+    ) -> ShareResponse:
+        try:
+            return repository.create_share(user, share.note)
+        except psycopg.Error:
+            logger.exception("Failed to create share for user %s", user.id)
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Share store is unavailable",
+            ) from None
+
+    @app.get("/v1/shares/{share_id}", response_model=ShareResponse)
+    def get_share(share_id: str) -> ShareResponse:
+        if len(share_id) > 64:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Share was not found",
+            )
+        try:
+            share = repository.load_share(share_id)
+        except psycopg.Error:
+            logger.exception("Failed to load share %s", share_id)
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Share store is unavailable",
+            ) from None
+        if share is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Share was not found",
+            )
+        return share
 
     return app
 

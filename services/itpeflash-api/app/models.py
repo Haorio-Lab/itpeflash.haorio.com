@@ -48,3 +48,13 @@ class Snapshot(BaseModel):
 class AuthenticatedUser(BaseModel):
     id: UUID
     email: str = Field(min_length=3)
+
+
+class ShareCreate(BaseModel):
+    note: Note
+
+
+class ShareResponse(BaseModel):
+    shareId: str = Field(min_length=8, max_length=64)
+    note: Note
+    createdAt: datetime | None = None

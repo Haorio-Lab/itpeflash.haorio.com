@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 from uuid import UUID
 
 import psycopg
-import pytest
 
 from app.db import SnapshotRepository
 from app.models import AuthenticatedUser, Note, Snapshot

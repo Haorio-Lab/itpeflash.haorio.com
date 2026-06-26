@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from app.models import Note, Snapshot
+from app.models import Note, ShareCreate, ShareResponse, Snapshot
 
 
 def make_note(note_id: str = "note-1") -> Note:
@@ -42,3 +42,13 @@ def test_snapshot_rejects_duplicate_note_ids() -> None:
 def test_snapshot_rejects_status_for_unknown_note() -> None:
     with pytest.raises(ValidationError, match="reference notes"):
         Snapshot(notes=[make_note()], statuses={"missing": "review"})
+
+
+def test_share_models_accept_one_card_snapshot() -> None:
+    note = make_note()
+
+    request = ShareCreate(note=note)
+    response = ShareResponse(shareId="abc123xyz", note=note)
+
+    assert request.note.id == "note-1"
+    assert response.shareId == "abc123xyz"

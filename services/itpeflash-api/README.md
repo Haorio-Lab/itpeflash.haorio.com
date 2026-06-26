@@ -19,7 +19,7 @@ FastAPI 서비스입니다. Supabase 서비스 키는 사용하지 않습니다.
 
 ```dotenv
 DATABASE_URL=postgresql://henryhoy:<PASSWORD>@postgres-personal:5432/haoriodb
-SUPABASE_URL=https://svrvckvuwwucrynyqvqk.supabase.co
+SUPABASE_URL=https://stivaxmewvlktxquetlm.supabase.co
 SUPABASE_JWT_AUDIENCE=authenticated
 ITPEFLASH_ALLOWED_ORIGINS=https://itpeflash.haorio.com
 ```
@@ -82,3 +82,9 @@ docker run -d \
 
 DSM 역방향 프록시는 `https://itpeflash-api.haorio.com`을
 `http://127.0.0.1:18080`으로 전달하면 됩니다.
+
+## Shared card links
+
+- `POST /v1/shares` requires a Supabase bearer token and stores one card snapshot.
+- `GET /v1/shares/{share_id}` is public read-only and returns only that shared card.
+- Apply `migrations/002_shared_cards.sql` before deploying the API version that uses shared links.

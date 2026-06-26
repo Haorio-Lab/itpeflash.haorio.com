@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import secrets
 
 import psycopg
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
-from .models import AuthenticatedUser, Snapshot
+from .models import AuthenticatedUser, Note, ShareResponse, Snapshot
 
 
 class SnapshotRepository:
@@ -134,3 +135,40 @@ class SnapshotRepository:
 
         # The API intentionally never removes rows omitted from a client snapshot.
         return self.load(user)
+
+    def create_share(self, user: AuthenticatedUser, note: Note) -> ShareResponse:
+        share_id = secrets.token_urlsafe(12)
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                INSERT INTO itpeflash_shared_cards (share_id, owner_user_id, note_data)
+                VALUES (%s, %s, %s)
+                RETURNING share_id, note_data, created_at
+                """,
+                (share_id, user.id, Jsonb(note.model_dump(mode="json"))),
+            ).fetchone()
+
+        return ShareResponse(
+            shareId=row["share_id"],
+            note=row["note_data"],
+            createdAt=row["created_at"],
+        )
+
+    def load_share(self, share_id: str) -> ShareResponse | None:
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT share_id, note_data, created_at
+                FROM itpeflash_shared_cards
+                WHERE share_id = %s
+                """,
+                (share_id,),
+            ).fetchone()
+
+        if row is None:
+            return None
+        return ShareResponse(
+            shareId=row["share_id"],
+            note=row["note_data"],
+            createdAt=row["created_at"],
+        )
